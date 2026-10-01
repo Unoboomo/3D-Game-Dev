@@ -125,6 +125,7 @@
     <ClCompile Include="..\src\gf3d_device.c" />
     <ClCompile Include="..\src\gf3d_extensions.c" />
     <ClCompile Include="..\src\gf3d_gltf_parse.c" />
+    <ClCompile Include="..\src\gf3d_mesh.c" />
     <ClCompile Include="..\src\gf3d_obj_load.c" />
     <ClCompile Include="..\src\gf3d_pipeline.c" />
     <ClCompile Include="..\src\gf3d_shaders.c" />
@@ -134,6 +135,7 @@
     <ClCompile Include="..\src\gf3d_validation.c" />
     <ClCompile Include="..\src\gf3d_vgraphics.c" />
     <ClCompile Include="..\src\gf3d_vqueues.c" />
+    <ClCompile Include="..\src\model.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gfc\include\gfc_actions.h" />
@@ -189,6 +191,26 @@
     <ClInclude Include="..\include\gf3d_validation.h" />
     <ClInclude Include="..\include\gf3d_vgraphics.h" />
     <ClInclude Include="..\include\gf3d_vqueues.h" />
+    <ClInclude Include="..\include\model.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\config\audio.cfg" />
+    <None Include="..\config\font.cfg" />
+    <None Include="..\config\input.cfg" />
+    <None Include="..\config\model_pipeline.cfg" />
+    <None Include="..\config\overlay_pipeline.cfg" />
+    <None Include="..\config\setup.cfg" />
+    <None Include="..\config\sky_pipeline.cfg" />
+    <None Include="..\shaders\model.frag" />
+    <None Include="..\shaders\model.vert" />
+    <None Include="..\shaders\model_frag.spv" />
+    <None Include="..\shaders\model_vert.spv" />
+    <None Include="..\shaders\sky.frag" />
+    <None Include="..\shaders\sky.vert" />
+    <None Include="..\shaders\sprite.frag" />
+    <None Include="..\shaders\sprite.vert" />
+    <None Include="..\shaders\sprite_frag.spv" />
+    <None Include="..\shaders\sprite_vert.spv" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

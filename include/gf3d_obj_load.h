@@ -26,7 +26,7 @@ struct ObjData_S
     Face *outFace;
     
     Vertex *faceVertices;
-    Uint32  face_vert_count;
+    Uint32  face_vert_count; /// should just be face_count * 3
     GFC_Box     bounds;
 };
 
