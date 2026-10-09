@@ -11,6 +11,8 @@
 
 #include "model.h"
 
+#define MAX_MESHES 1024
+
 extern int __DEBUG;
 
 typedef struct
@@ -25,6 +27,13 @@ typedef struct
 }ModelManager;
 
 static ModelManager model_manager = { 0 };
+
+/**
+ * @brief initialize a new model in modelList
+ * @param model_manager_index the index of the location in model_manager_manager modelList for the model to be initialized
+ * @return NULL on error, or an empty model
+ */
+Model* model_initialize(Uint32 model_manager_index);
 
 void model_delete(Model* model);
 
@@ -68,16 +77,19 @@ void model_manager_init(Uint32 max_models)
         return;
     }
     model_manager.chainLength = gf3d_swapchain_get_chain_length();
-    model_manager.modelList = gfc_allocate_array(sizeof(Model), max_models);
     model_manager.modelCount = max_models;
     model_manager.device = gf3d_vgraphics_get_default_logical_device();
+    model_manager.modelList = gfc_allocate_array(sizeof(Model), max_models);
 
     if (!model_manager.modelList)
     {
-        //dont need to error check cause gfc_allocate_array already did
+        slog("cannot allocate more memory for model_manager meshList");
+        slog_sync();
+        model_system_close();
+        exit(-1);
         return;
     }
-    gf3d_mesh_system_init(1024); //error check
+    gf3d_mesh_system_init(MAX_MESHES);
 
     //sky pipeline
     /*
@@ -93,7 +105,7 @@ void model_manager_init(Uint32 max_models)
         VK_INDEX_TYPE_UINT16
     );
     */
-
+    gf3d_mesh_get_attribute_descriptions(&count);
     model_manager.pipe = gf3d_pipeline_create_from_config(
         gf3d_vgraphics_get_default_logical_device(),
         "config/model_pipeline.cfg",
@@ -101,7 +113,7 @@ void model_manager_init(Uint32 max_models)
         max_models,
         gf3d_mesh_get_bind_description(),
         gf3d_mesh_get_attribute_descriptions(NULL),
-        MESH_ATTRIBUTE_COUNT,
+        count,
         sizeof(ModelUBO),
         VK_INDEX_TYPE_UINT16
     );
@@ -161,9 +173,7 @@ Model* model_new()
             }
             if (strlen(model_manager.modelList[i].filename) == 0)
             {
-                //boiler plate initilization goes here
-                model_manager.modelList[i]._refCount = 1;
-                return &model_manager.modelList[i];
+                return model_initsialize(i);
             }
         }
     }
@@ -173,8 +183,7 @@ Model* model_new()
         {
             model_delete(&model_manager.modelList[emptyIndex]);
         }
-        model_manager.modelList[emptyIndex]._refCount = 1;
-        return &model_manager.modelList[emptyIndex];
+        return model_initialize(emptyIndex);
     }
     else 
     {
@@ -182,6 +191,14 @@ Model* model_new()
         return NULL;
     }
 }
+
+Model* model_initialize(Uint32 model_manager_index)
+{
+    //boiler plate initilization goes here
+    model_manager.modelList[model_manager_index]._refCount = 1;
+    return &model_manager.modelList[model_manager_index];
+}
+
 
 Model* model_load(const char* filename)
 {
@@ -191,6 +208,7 @@ Model* model_load(const char* filename)
     Texture* texture;
     SJson* json, * data;
     Model* model;
+
     if (!filename)
     {
         return NULL;
@@ -204,7 +222,7 @@ Model* model_load(const char* filename)
     json = sj_load(filename);
     if (!json)
     {
-        slog("failed to load model %s", filename);
+        slog("failed to load model json %s", filename);
         return NULL;
     }
     data = sj_object_get_value(json, "model");
@@ -229,6 +247,7 @@ Model* model_load(const char* filename)
     if (!mesh)
     {
         slog("failed to parese obj data for model file %s", filename);
+        gf3d_mesh_free(mesh);
         sj_free(json);
         return NULL;
     }
@@ -250,6 +269,9 @@ Model* model_load(const char* filename)
     if (!model)
     {
         slog("failed to get an empty space in memory for model %s", filename);
+        gf3d_texture_free(texture);
+        gf3d_mesh_free(mesh);
+        sj_free(json);
         return NULL;
     }
     model->mesh = mesh;
@@ -292,15 +314,10 @@ ModelUBO model_get_ubo(GFC_Matrix4 modelMat, GFC_Color colorMod)
     ModelUBO ubo = { 0 };
     GFC_Matrix4* view;
     gfc_matrix4_copy(ubo.model, modelMat);
-    view = gf3d_vgraphics_get_view_matrix();
-    if (view)
-    {
-        gfc_matrix4_copy(ubo.view, *view);
-    }
+    gf3d_vgraphics_get_view(&ubo.view);
     gf3d_vgraphics_get_projection_matrix(&ubo.proj);
     ubo.color = gfc_color_to_vector4f(colorMod);
     return ubo;
- 
 }
 
 void model_queue_render_sky(Model* model, GFC_Matrix4 mat, GFC_Color colorMod)

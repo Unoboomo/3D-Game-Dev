@@ -17,16 +17,6 @@
 //forward declaration:
 typedef struct ObjData_S ObjData;
 
-/*absolute basics of the mesh information sent to the graphics card
-typedef struct
-{
-    GFC_Matrix4     model;
-    GFC_Matrix4     view;
-    GFC_Matrix4     proj;
-    GFC_Vector4D    color;
-}MeshUBO;
-dont need?*/
-
 //this is the information for a vertex (the position of the vertex, the normal, and the tecel from the png for color)
 typedef struct
 {
@@ -58,14 +48,14 @@ typedef struct
 {
     GFC_TextLine        filename; //in mesh load
     Uint32              _refCount; //set to 1 in mesh new
-    GFC_List           *primitives; // allocated in mesh new, done where?
+    GFC_List           *primitives; // allocated in mesh new
     GFC_Box             bounds; //in mesh load
 }Mesh;
 
 /**
  * @brief initializes the mesh system / configures internal data about mesh based rendering
- * @param max_meshes the maximum allowed simultaneous meshes supported at once.  Must be > 0
- * @note keep in mind that many models will be comprised of multiple sub meshes.  So this number may need to be very large
+ * @param max_meshes the maximum allowed simultaneous meshes supported at once. Must be > 0
+ * @note keep in mind that many models will be comprised of multiple sub meshes. So this number may need to be very large
  */
 void gf3d_mesh_system_init(Uint32 max_meshes);
 

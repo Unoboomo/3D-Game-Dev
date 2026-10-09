@@ -43,7 +43,7 @@ int main(int argc,char *argv[])
     //local variables
     Model* model;
     Sprite *bg;
-    GFC_Matrix4 mat, mat2, * view;
+    GFC_Matrix4 mat, * view;
     //initializtion    
     parse_arguments(argc,argv);
     //name of log file, should it be erased (0 overwrite, 1 append)
@@ -64,11 +64,7 @@ int main(int argc,char *argv[])
     bg = gf2d_sprite_load_image("images/bg_flat.png");
     gf2d_mouse_load("actors/mouse.actor");
     gfc_matrix4_identity(mat);
-    gfc_matrix4_from_vectors(&mat2,
-        gfc_vector3d(0, 0, 0),
-        gfc_vector3d(90, 90, 90),
-        gfc_vector3d(1, 1, 1)
-    );
+
     view = gf3d_vgraphics_get_view_matrix();
     model = model_load("models/dino/dino.model");
     // main game loop    

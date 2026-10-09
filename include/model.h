@@ -34,8 +34,8 @@ void model_manager_init(Uint32 max_models);
 Model* model_new();
 
 /**
- * @brief loads a model into memory
- * @param filename the name of the file containing the image data
+ * @brief loads a model into memory from an .model filename
+ * @param filename the name of the file containing the model data
  * @return NULL on error (check logs) or a pointer to a model that can be rendered
  */
 Model* model_load(const char* filename);

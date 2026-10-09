@@ -10,7 +10,7 @@
 #include "gf3d_mesh.h"
 #include "gf3d_obj_load.h"
 
-
+extern int __DEBUG;
 
 typedef struct
 {
@@ -25,6 +25,13 @@ static MeshManager mesh_manager = {0};
 
 //forward declarations start
 void gf3d_mesh_system_close();
+
+/**
+ * @brief initialize a new mesh in meshList
+ * @param mesh_manager_index the index of the location in mesh_manager meshList for the mesh to be initialized
+ * @return NULL on error, or an empty mesh
+ */
+Mesh* gf3d_mesh_initialize(Uint32 mesh_manager_index);
 
 void gf3d_mesh_delete(Mesh* mesh);
 
@@ -52,26 +59,35 @@ void gf3d_mesh_system_init(Uint32 max_meshes)
     mesh_manager.meshList = gfc_allocate_array(sizeof(Mesh), max_meshes);
     if (!mesh_manager.meshList)
     {
-        //dont need to error check cause gfc_allocate_array already did
+        slog("cannot allocate more memory for mesh_manager meshList");
+        slog_sync();
+        gf3d_mesh_system_close();
+        exit(-1);
         return;
     }
-    mesh_manager.device = gf3d_vgraphics_get_default_logical_device();;
+    mesh_manager.device = gf3d_vgraphics_get_default_logical_device();
     mesh_manager.meshCount = max_meshes;
+
     //we dont initialize the attributeDescriptions + bindingDescription becuase
     //model_system_init does that since its making the pipeline
     atexit(gf3d_mesh_system_close);
+    if (__DEBUG)slog("mesh manager initialized");
 }
 
 void gf3d_mesh_system_close()
 {
     int i;
-    //go through list of meshes and free them all
-    for (i = 0; i < mesh_manager.meshCount; i++)
+    //go through list of meshes and delete them all
+    if (mesh_manager.meshList)
     {
-        gf3d_mesh_delete(&mesh_manager.meshList[i]);
+        for (i = 0; i < mesh_manager.meshCount; i++)
+        {
+            gf3d_mesh_delete(&mesh_manager.meshList[i]);
+        }
+        free(mesh_manager.meshList);
     }
-    free(mesh_manager.meshList);
     memset(&mesh_manager, 0, sizeof(MeshManager));
+    if (__DEBUG)slog("mesh manager closed");
 }
 
 Mesh* gf3d_mesh_new()
@@ -90,16 +106,9 @@ Mesh* gf3d_mesh_new()
             }
             if (strlen(mesh_manager.meshList[i].filename) == 0)
             {
-                //boiler plate initilization goes here
-                mesh_manager.meshList[i].primitives = gfc_list_new();
-                if (mesh_manager.meshList[i].primitives == NULL)
-                {
-                    slog("cannot allocate more memory for a new mesh");
-                    return NULL;
-                }
-                mesh_manager.meshList[i]._refCount = 1;
-                return &mesh_manager.meshList[i];
+                return gf3d_mesh_initialize(i);
             }
+
         }
     }
     if (foundEmptyIndex)
@@ -108,21 +117,26 @@ Mesh* gf3d_mesh_new()
         {
             gf3d_mesh_delete(&mesh_manager.meshList[emptyIndex]);
         }
-        //boiler plate initilization goes here
-        mesh_manager.meshList[emptyIndex].primitives = gfc_list_new();
-        if (mesh_manager.meshList[emptyIndex].primitives == NULL)
-        {
-            slog("cannot allocate more memory for a new mesh");
-            return NULL;
-        }
-        mesh_manager.meshList[emptyIndex]._refCount = 1;
-        return &mesh_manager.meshList[emptyIndex];
+        return gf3d_mesh_initialize(emptyIndex);
     }
     else
     {
         slog("gf3d_mesh_new: no free slots for new meshes");
         return NULL;
     }
+}
+
+Mesh* gf3d_mesh_initialize(Uint32 mesh_manager_index)
+{
+    //boiler plate initilization goes here
+    mesh_manager.meshList[mesh_manager_index].primitives = gfc_list_new();
+    if (mesh_manager.meshList[mesh_manager_index].primitives == NULL)
+    {
+        slog("cannot allocate more memory for a new mesh");
+        return NULL;
+    }
+    mesh_manager.meshList[mesh_manager_index]._refCount = 1;
+    return &mesh_manager.meshList[mesh_manager_index];
 }
 
 void gf3d_mesh_free(Mesh* mesh)
@@ -168,7 +182,7 @@ MeshPrimitive* gf3d_mesh_primitive_new()
     //defaults here
     if (!prim)
     {
-        //dont need to error check cause gfc_allocate_array already did
+        slog("cannot allocate more memory for new mesh primitive");
         return NULL;
     }
     return prim;
@@ -206,8 +220,8 @@ int gf3d_mesh_primitive_buffer_create(MeshPrimitive* prim)
     memcpy(data, prim->objData->outFace, (size_t)bufferSize);
     vkUnmapMemory(mesh_manager.device, stagingBufferMemory);
 
-    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        &prim->faceBuffer, &prim->faceBufferMemory);
+    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &prim->faceBuffer, &prim->faceBufferMemory);
 
     gf3d_buffer_copy(stagingBuffer, prim->faceBuffer, bufferSize);
 
@@ -225,8 +239,8 @@ int gf3d_mesh_primitive_buffer_create(MeshPrimitive* prim)
     memcpy(data, prim->objData->faceVertices, (size_t)bufferSize);
     vkUnmapMemory(mesh_manager.device, stagingBufferMemory);
 
-    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        &prim->vertexBuffer, &prim->vertexBufferMemory);
+    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &prim->vertexBuffer, &prim->vertexBufferMemory);
 
     gf3d_buffer_copy(stagingBuffer, prim->vertexBuffer, bufferSize);
 
@@ -272,7 +286,7 @@ void gf3d_mesh_primitive_buffer_free(MeshPrimitive* prim)
 
 Mesh* gf3d_mesh_load_obj(const char* filename)
 {
-    int now, later;
+    //int now, later;
     Mesh* mesh;
     MeshPrimitive* prim;
 
@@ -299,14 +313,11 @@ Mesh* gf3d_mesh_load_obj(const char* filename)
         gf3d_mesh_delete(mesh);
         return NULL;
     }
-    slog("before prim obj");
-    slog_sync();
-    now = SDL_GetTicks();
+    //now = SDL_GetTicks();
     prim->objData = gf3d_obj_load_from_file(filename);
-    later = SDL_GetTicks();
-    slog("have prim obj new");
-    slog("time: %d", later - now);
-    slog_sync();
+    //later = SDL_GetTicks();
+    //slog("time: %d", later - now);
+    //slog_sync();
     if (!prim->objData)
     {
         slog("failed to parse file %s for obj data", filename);
@@ -316,13 +327,15 @@ Mesh* gf3d_mesh_load_obj(const char* filename)
     }
     if (!gf3d_mesh_primitive_buffer_create(prim))
     {
-        slog("failed to build memory buffer for ", filename);
+        slog("failed to build prim memory buffer for prim for filename %s", filename);
         gf3d_mesh_delete(mesh);
         gf3d_mesh_primitive_free(prim);
         return NULL;
     }
     gfc_list_append(mesh->primitives, prim);
+    //if you want a mesh to have multiple primitives, do that here
     gfc_line_cpy(mesh->filename, filename);
+    gfc_box_cpy(mesh->bounds, prim->objData->bounds);
     return mesh;
 }
 

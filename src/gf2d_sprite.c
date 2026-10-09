@@ -127,13 +127,16 @@ void gf2d_sprite_manager_init(Uint32 max_sprites)
     bufferSize = sizeof(SpriteFace) * 2;
     
     //from here
-    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
+    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
+        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferMemory);
 
     vkMapMemory(gf2d_sprite.device, stagingBufferMemory, 0, bufferSize, 0, &data);
     memcpy(data, faces, (size_t) bufferSize);
     vkUnmapMemory(gf2d_sprite.device, stagingBufferMemory);
 
-    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &gf2d_sprite.faceBuffer, &gf2d_sprite.faceBufferMemory);
+    gf3d_buffer_create(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+        &gf2d_sprite.faceBuffer, &gf2d_sprite.faceBufferMemory);
 
     gf3d_buffer_copy(stagingBuffer, gf2d_sprite.faceBuffer, bufferSize);
 

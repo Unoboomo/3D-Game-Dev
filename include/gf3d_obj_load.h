@@ -22,8 +22,8 @@ struct ObjData_S
     Face *faceBones;
     Face *faceWeights;
     
+    Face* outFace;
     Uint32 face_count;
-    Face *outFace;
     
     Vertex *faceVertices;
     Uint32  face_vert_count; /// should just be face_count * 3
