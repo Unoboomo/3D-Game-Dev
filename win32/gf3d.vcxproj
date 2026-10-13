@@ -142,6 +142,7 @@
     <ClCompile Include="..\gfc\src\physfs_platform_unix.c" />
     <ClCompile Include="..\gfc\src\physfs_platform_windows.c" />
     <ClCompile Include="..\gfc\src\physfs_unicode.c" />
+    <ClCompile Include="..\src\entity.c" />
     <ClCompile Include="..\src\game.c" />
     <ClCompile Include="..\src\gf2d_actor.c" />
     <ClCompile Include="..\src\gf2d_camera.c" />
@@ -166,6 +167,7 @@
     <ClCompile Include="..\src\gf3d_vgraphics.c" />
     <ClCompile Include="..\src\gf3d_vqueues.c" />
     <ClCompile Include="..\src\model.c" />
+    <ClCompile Include="..\src\player.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gfc\include\gfc_actions.h" />
@@ -203,6 +205,7 @@
     <ClInclude Include="..\gfc\simple_json\include\simple_json_types.h" />
     <ClInclude Include="..\gfc\simple_json\include\simple_json_value.h" />
     <ClInclude Include="..\gfc\simple_logger\include\simple_logger.h" />
+    <ClInclude Include="..\include\entity.h" />
     <ClInclude Include="..\include\gf2d_actor.h" />
     <ClInclude Include="..\include\gf2d_camera.h" />
     <ClInclude Include="..\include\gf2d_font.h" />
@@ -227,6 +230,7 @@
     <ClInclude Include="..\include\gf3d_vgraphics.h" />
     <ClInclude Include="..\include\gf3d_vqueues.h" />
     <ClInclude Include="..\include\model.h" />
+    <ClInclude Include="..\include\player.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\config\audio.cfg" />

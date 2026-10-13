@@ -22,6 +22,8 @@
 
 #include "gf3d_mesh.h"
 #include "model.h"
+#include "entity.h"
+#include "player.h"
 
 extern int __DEBUG;
 
@@ -41,9 +43,8 @@ void exitGame()
 int main(int argc,char *argv[])
 {
     //local variables
-    Model* model;
     Sprite *bg;
-    GFC_Matrix4 mat, * view;
+    GFC_Matrix4 * view;
     //initializtion    
     parse_arguments(argc,argv);
     //name of log file, should it be erased (0 overwrite, 1 append)
@@ -57,16 +58,18 @@ int main(int argc,char *argv[])
     gf3d_vgraphics_init("config/setup.cfg");
     gf2d_font_init("config/font.cfg");
     gf2d_actor_init(1000);
-    
+    entity_system_init(1000);
+
     //game init
     srand(SDL_GetTicks());
     slog_sync();
     bg = gf2d_sprite_load_image("images/bg_flat.png");
     gf2d_mouse_load("actors/mouse.actor");
-    gfc_matrix4_identity(mat);
 
     view = gf3d_vgraphics_get_view_matrix();
-    model = model_load("models/dino/dino.model");
+    player_new(gfc_vector3d(0, 0, 0));
+
+
     // main game loop    
     while(!_done)
     {
@@ -81,9 +84,13 @@ int main(int argc,char *argv[])
             gfc_vector3d(0, 0, 1)
         );
         
+        entity_system_think_all();
+        entity_system_update_all();
+
         gf3d_vgraphics_render_start();
                 //3D draws
-                model_queue_render(model, mat, GFC_COLOR_WHITE);
+                entity_system_queue_render_all();
+                //model_queue_render(model, mat, GFC_COLOR_WHITE);
                 //2D draws
                 //get rid of the background image
                 //gf2d_sprite_draw_image(bg,gfc_vector2d(0,0));

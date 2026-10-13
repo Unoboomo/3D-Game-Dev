@@ -173,7 +173,7 @@ Model* model_new()
             }
             if (strlen(model_manager.modelList[i].filename) == 0)
             {
-                return model_initsialize(i);
+                return model_initialize(i);
             }
         }
     }
