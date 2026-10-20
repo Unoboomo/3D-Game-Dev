@@ -36,25 +36,29 @@ typedef struct Entity_s
 
 	Model *model;							//graphical representation of the entity
 
-	GFC_Vector3D position; 
+
+	GFC_Vector3D	position;				//the position of the entity in space (the entity is centered on this point)
+	GFC_Vector3D	velocity;				//how fast the entity is moving
+	GFC_Vector3D	acceleration;			//how fast the velocity changes 
+
 	GFC_Vector3D rotation;	//x - pitch (around sideways vector), y - roll (around forward vector), z - yaw (around up vector)
+
 	GFC_Vector3D scale;
 
 	GFC_Matrix4	mat;
 	GFC_Color color_mod;
 
-	GFC_Vector3D velocity;
 
 	
 	int		(*think)(struct Entity_s* self);														//pointer to a think function
 	int		(*update)(struct Entity_s* self);														//pointer to a update function (all entities can think based on the same gamestate, then update all)
 	int		(*draw)(struct Entity_s* self);
-	int		(*free)(struct Entity_s* self);															//pointer to a free function
+	void	(*free)(struct Entity_s* self);															//pointer to a free function
 
 
 	void				(*touch)(struct Entity_s* self, struct Entity_s* other, GFC_Vector2D collision_side);	//pointer to a touch function 
 
-	void* data;								//the storage for unique entity type data, eg. (gclient, monsterdata, itemdata, etc.)			
+	void* data;								//the storage for unique entity type data, (if set, you must specify a free function)			
 }Entity;
 
 
@@ -103,7 +107,11 @@ void entity_system_think_all();
 */
 void entity_system_queue_render_all();
 
-
+/**
+* @brief updates the position of an entity from its velocity and ensures it is still in world bounds
+* @param *self a pointer to the entity to update the position of
+*/
+void entity_update_position(Entity* self);
 
 
 
@@ -150,11 +158,7 @@ void entity_configure_from_json(Entity* self, SJson* json);
 
 SJson* entity_save_all_to_config();
 
-/**
-* @brief updates the position of an entity from its velocity and ensures it is still in the window
-* @param *self a pointer to the entity to update the position of
-*/
-void entity_update_position(Entity* self);
+
 
 /**
 * @brief checks if the entity's team matches with another team

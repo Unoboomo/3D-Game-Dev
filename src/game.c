@@ -24,6 +24,7 @@
 #include "model.h"
 #include "entity.h"
 #include "player.h"
+//#include "level.h"
 
 extern int __DEBUG;
 
@@ -43,9 +44,11 @@ void exitGame()
 int main(int argc,char *argv[])
 {
     //local variables
+    //Level* level;
     Sprite *bg;
     GFC_Matrix4 * view, mat;
     Model* sky;
+    Model* ground;
     //initializtion    
     parse_arguments(argc,argv);
     //name of log file, should it be erased (0 overwrite, 1 append)
@@ -57,6 +60,7 @@ int main(int argc,char *argv[])
     gfc_action_init(1024);
     //gf3d init
     gf3d_vgraphics_init("config/setup.cfg");
+    //gfc_sound_init_config("config/audio.cfg");
     gf2d_font_init("config/font.cfg");
     gf2d_actor_init(1000);
     entity_system_init(1000);
@@ -66,8 +70,9 @@ int main(int argc,char *argv[])
     slog_sync();
     bg = gf2d_sprite_load_image("images/bg_flat.png");
     gf2d_mouse_load("actors/mouse.actor");
-
-    view = gf3d_vgraphics_get_view_matrix();
+    //level = level_load("levels/test_level.level");
+    gfc_matrix4_identity(mat);
+    ground = model_load("models/ground/ground.model");
     player_new(gfc_vector3d(0, 0, 0));
     sky = model_load("models/sky/sky.model");
     gfc_matrix4_identity(mat);
@@ -78,12 +83,7 @@ int main(int argc,char *argv[])
         gf2d_mouse_update();
         gf2d_font_update();
         //camera updates
-        gfc_matrix4_view(
-            *view,
-            gfc_vector3d(10, -20, 10),
-            gfc_vector3d(0, 0, 0),
-            gfc_vector3d(0, 0, 1)
-        );
+
         
         entity_system_think_all();
         entity_system_update_all();
@@ -92,7 +92,7 @@ int main(int argc,char *argv[])
                 //3D draws
                 model_queue_render_sky(sky, mat, GFC_COLOR_WHITE);
                 entity_system_queue_render_all();
-                //model_queue_render(model, mat, GFC_COLOR_WHITE);
+                model_queue_render(ground, mat, GFC_COLOR_WHITE);
                 //2D draws
                 //get rid of the background image
                 //gf2d_sprite_draw_image(bg,gfc_vector2d(0,0));

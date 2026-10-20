@@ -1,0 +1,6 @@
+{
+  "model": {
+    "obj": "models/ground/ground.obj",
+    "texture": "models/ground/ground.png"
+  }
+}
