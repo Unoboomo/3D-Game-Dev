@@ -55,6 +55,30 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{8c03c225-97cd-4595-8c52-36157f521616}</UniqueIdentifier>
     </Filter>
+    <Filter Include="models">
+      <UniqueIdentifier>{cd749b16-8f7e-4177-8426-cb0409748eb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="models\dino">
+      <UniqueIdentifier>{f20d7948-fde4-42f4-a20c-dc0526d82a91}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="models\ground">
+      <UniqueIdentifier>{02d0c492-0ca6-48e0-8326-668cde9d3734}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="models\primitives">
+      <UniqueIdentifier>{dd05ceae-08aa-4625-bb86-9e1405b4d2a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="models\sky">
+      <UniqueIdentifier>{9dac34d3-2f4d-458f-b29e-f56e10488d04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="levels">
+      <UniqueIdentifier>{00d09a8e-04f0-4e6a-950c-33f4aa347d4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sounds">
+      <UniqueIdentifier>{505ab6eb-afe5-4c81-8724-e9160fd91a9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sounds\music">
+      <UniqueIdentifier>{289e6c38-d1e7-47ca-a7cd-24a232cf059f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\gf3d_buffers.c">
@@ -306,6 +330,9 @@
     <ClCompile Include="..\src\player.c">
       <Filter>Source Files\game</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\level.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\gf2d_actor.h">
@@ -491,6 +518,9 @@
     <ClInclude Include="..\include\player.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\level.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\config\audio.cfg">
@@ -547,10 +577,92 @@
     <None Include="..\gfc\src\Makefile">
       <Filter>Source Files\gfc</Filter>
     </None>
+    <None Include="..\models\dino\dino.model">
+      <Filter>models\dino</Filter>
+    </None>
+    <None Include="..\models\dino\dino_skin.blend">
+      <Filter>models\dino</Filter>
+    </None>
+    <None Include="..\models\ground\ground.blend">
+      <Filter>models\ground</Filter>
+    </None>
+    <None Include="..\models\ground\ground.model">
+      <Filter>models\ground</Filter>
+    </None>
+    <None Include="..\models\sky\sky.blend">
+      <Filter>models\sky</Filter>
+    </None>
+    <None Include="..\models\sky\sky.blend1">
+      <Filter>models\sky</Filter>
+    </None>
+    <None Include="..\models\sky\sky.xcf">
+      <Filter>models\sky</Filter>
+    </None>
+    <None Include="..\models\sky\sky.model">
+      <Filter>models\sky</Filter>
+    </None>
+    <None Include="..\models\cube.json">
+      <Filter>models</Filter>
+    </None>
+    <None Include="..\models\susanne.json">
+      <Filter>models</Filter>
+    </None>
+    <None Include="..\models\primitives\flatwhite.xcf">
+      <Filter>models\primitives</Filter>
+    </None>
+    <None Include="..\levels\test_level.level">
+      <Filter>levels</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\gfc\src\physfs_version.rc">
       <Filter>Source Files\gfc</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\models\dino\dino.obj">
+      <Filter>models\dino</Filter>
+    </Object>
+    <Object Include="..\models\ground\ground.obj">
+      <Filter>models\ground</Filter>
+    </Object>
+    <Object Include="..\models\sky\sky.obj">
+      <Filter>models\sky</Filter>
+    </Object>
+    <Object Include="..\models\cube.obj">
+      <Filter>models</Filter>
+    </Object>
+    <Object Include="..\models\testworld.obj">
+      <Filter>models</Filter>
+    </Object>
+    <Object Include="..\models\primitives\cube.obj">
+      <Filter>models\primitives</Filter>
+    </Object>
+    <Object Include="..\models\primitives\icube.obj">
+      <Filter>models\primitives</Filter>
+    </Object>
+    <Object Include="..\models\primitives\icylinder.obj">
+      <Filter>models\primitives</Filter>
+    </Object>
+    <Object Include="..\models\primitives\isphere.obj">
+      <Filter>models\primitives</Filter>
+    </Object>
+    <Object Include="..\models\primitives\sphere.obj">
+      <Filter>models\primitives</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\models\dino\dino.png">
+      <Filter>models\dino</Filter>
+    </Image>
+    <Image Include="..\models\ground\ground.png">
+      <Filter>models\ground</Filter>
+    </Image>
+    <Image Include="..\models\sky\sky.png">
+      <Filter>models\sky</Filter>
+    </Image>
+    <Image Include="..\models\primitives\flatwhite.png">
+      <Filter>models\primitives</Filter>
+    </Image>
   </ItemGroup>
 </Project>

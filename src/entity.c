@@ -98,7 +98,7 @@ void entity_free(Entity* self)
 	}
 	if (self->free)
 	{
-		if (self->free(self));
+		self->free(self);
 	}
 	memset(self, 0, sizeof(Entity));
 }
@@ -123,7 +123,6 @@ void entity_update(Entity* self)
 		}
 	}
 	//generic updating goes here
-	gfc_vector3d_add(self->position, self->position, self->velocity);
 }
 
 void entity_think(Entity* self)
