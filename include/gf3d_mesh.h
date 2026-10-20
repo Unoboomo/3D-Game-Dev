@@ -28,7 +28,7 @@ typedef struct
 //the colors are interpolated from the vertex texels across the face
 typedef struct
 {
-    Uint16  verts[3]; //prolly wont need to, but may bug and need to increase to 32 bit int
+    Uint32  verts[3]; //prolly wont need to, but may bug and need to increase to 32 bit int
 }Face;
 
 //these are each group of verticies+faces that makes up an individual thing
