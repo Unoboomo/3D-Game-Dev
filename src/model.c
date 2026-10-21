@@ -103,7 +103,7 @@ void model_manager_init(Uint32 max_models)
         gf3d_mesh_get_attribute_descriptions(NULL),
         count,
         sizeof(ModelUBO),
-        VK_INDEX_TYPE_UINT16
+        VK_INDEX_TYPE_UINT32
     );
 
     model_manager.pipe = gf3d_pipeline_create_from_config(
