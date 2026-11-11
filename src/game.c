@@ -71,7 +71,7 @@ int main(int argc,char *argv[])
     slog_sync();
     bg = gf2d_sprite_load_image("images/bg_flat.png");
     gf2d_mouse_load("actors/mouse.actor");
-    level = level_load("levels/test_level.level");
+    level = level_load_from_file("levels/test_level.level");
     player_new(gfc_vector3d(0, 0, 0));
     // main game loop    
     while(!_done)
@@ -87,7 +87,7 @@ int main(int argc,char *argv[])
 
         gf3d_vgraphics_render_start();
                 //3D draws
-                level_draw(level);
+                level_queue_render(level);
                 entity_system_queue_render_all();
                 //2D draws
                 //get rid of the background image
