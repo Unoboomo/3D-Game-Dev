@@ -118,6 +118,8 @@ void model_manager_init(Uint32 max_models)
         VK_INDEX_TYPE_UINT32
     );
 
+    //model_manager.wire_pipe will go here
+
     if (!model_manager.pipe)
     {
         slog("failed to make pipeline for models!");
