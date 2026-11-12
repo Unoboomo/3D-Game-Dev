@@ -1,0 +1,6 @@
+{
+  "model": {
+    "obj": "models/steve/steve.obj",
+    "texture": "models/steve/steve.png"
+  }
+}

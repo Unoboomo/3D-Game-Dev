@@ -63,7 +63,7 @@ int main(int argc,char *argv[])
     //gfc_sound_init_config("config/audio.cfg");
     gf2d_font_init("config/font.cfg");
     gf2d_actor_init(1000);
-    //gfc_config_def_load("defs/items.def");
+    gfc_config_def_load("defs/items.def");
     entity_system_init(1000);
 
     //game init
@@ -73,6 +73,7 @@ int main(int argc,char *argv[])
     gf2d_mouse_load("actors/mouse.actor");
     level = level_load_from_file("levels/test_level.level");
     player_new(gfc_vector3d(0, 0, 0));
+    spawn_item_from_def("Steve", gfc_vector3d(195, 195, 1));
     // main game loop    
     while(!_done)
     {

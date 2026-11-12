@@ -1,0 +1,13 @@
+{
+  "items": [
+    {
+      "name": "Steve",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ],
+        "description": "steve",
+      }
+    },
+  ]
+}
