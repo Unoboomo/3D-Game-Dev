@@ -79,6 +79,12 @@
     <Filter Include="sounds\music">
       <UniqueIdentifier>{289e6c38-d1e7-47ca-a7cd-24a232cf059f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="defs">
+      <UniqueIdentifier>{1aab56d5-aa16-4515-9e64-3b6b74b41853}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="models\steve">
+      <UniqueIdentifier>{184fd119-8ce8-47bc-adbd-07e84e11cbf2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\gf3d_buffers.c">
@@ -333,6 +339,12 @@
     <ClCompile Include="..\src\level.c">
       <Filter>Source Files\game</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\item.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\gf2d_actor.h">
@@ -521,6 +533,12 @@
     <ClInclude Include="..\include\level.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\item.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\config\audio.cfg">
@@ -613,6 +631,21 @@
     <None Include="..\levels\test_level.level">
       <Filter>levels</Filter>
     </None>
+    <None Include="..\defs\items.def">
+      <Filter>defs</Filter>
+    </None>
+    <None Include="..\models\steve\steve.blend">
+      <Filter>models\steve</Filter>
+    </None>
+    <None Include="..\models\steve\steve.model">
+      <Filter>models\steve</Filter>
+    </None>
+    <None Include="..\config\wireframe_pipeline.cfg">
+      <Filter>config</Filter>
+    </None>
+    <None Include="..\shaders\wireframe.frag">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\gfc\src\physfs_version.rc">
@@ -650,6 +683,9 @@
     <Object Include="..\models\primitives\sphere.obj">
       <Filter>models\primitives</Filter>
     </Object>
+    <Object Include="..\models\steve\steve.obj">
+      <Filter>models\steve</Filter>
+    </Object>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\models\dino\dino.png">
@@ -663,6 +699,9 @@
     </Image>
     <Image Include="..\models\primitives\flatwhite.png">
       <Filter>models\primitives</Filter>
+    </Image>
+    <Image Include="..\models\steve\steve.png">
+      <Filter>models\steve</Filter>
     </Image>
   </ItemGroup>
 </Project>

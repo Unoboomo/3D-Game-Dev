@@ -3,16 +3,29 @@
 #include "gfc_input.h"
 #include "gf3d_vgraphics.h"
 #include "player.h"
-//#include "level.h"
+#include "level.h"
 
 int player_think(Entity* self);
 int player_update(Entity* self);
 void player_free(Entity* self);
 
+void player_sync_camera(Entity* self);
+
+static Entity* the_player = NULL;
+
+Entity* player_get_the()
+{
+	return the_player;
+}
 
 Entity* player_new(GFC_Vector3D position) {
 	Entity* self;
 	PlayerEntityData* data;
+
+	if (the_player)
+	{
+		return the_player;
+	}
 
 	self = entity_new();
 	if (!self) {
@@ -25,6 +38,9 @@ Entity* player_new(GFC_Vector3D position) {
 	self->think = player_think;
 	self->update = player_update;
 	self->free = player_free;
+
+	self->bounds = gfc_box(-7.16433, -4.18962, -6.57308, 14.3287, 9.0455, 10.4108);
+
 	data = gfc_allocate_array(sizeof(PlayerEntityData), 1);
 	if (data)
 	{
@@ -34,18 +50,30 @@ Entity* player_new(GFC_Vector3D position) {
 
 	}
 	self->data = data;
-
+	the_player = self;
 	return self;
+}
+
+void player_free(Entity* self) {
+	PlayerEntityData* data;
+	if (!self || !self->data)
+	{
+		return;
+	}
+
+	data = (PlayerEntityData*)self->data;
+	//clean up data
+
+	//free the data
+	free(data);
+	self->data = NULL;
+	the_player = NULL;
 }
 
 int player_think(Entity* self)
 {
-	//GFC_Edge3D edge;
-	//GFC_Vector3D *floor, offset;
-	PlayerEntityData* data;
-	GFC_Matrix4* view;
 	GFC_Vector3D move = { 0 };
-	//GFC_Vector3D offset = { 0, -1, 0};
+	PlayerEntityData* data;
 
 	if (!self || !self->data)
 	{
@@ -86,16 +114,6 @@ int player_think(Entity* self)
 	{
 		move.x = -1;
 	}
-
-	//offset = gfc_vector3d(0, 0, 100);
-	//gfc_vector3d_add(edge.a, self->position, offset);
-	//offset = gfc_vector3d(0, 0, -100);
-	//gfc_vector3d_add(edge.b, self->position, offset);
-	//
-	//if (level_line_test(level_get_the(), edge, &floor))
-	//{
-	//	self->position.z = floor->z + 7; //shoudl come from stats in player config file
-	//}
 	
 	if (move.x || move.y)
 	{
@@ -114,9 +132,11 @@ int player_think(Entity* self)
 int player_update(Entity* self)
 {
 	PlayerEntityData* data;
-	GFC_Matrix4* view;
-	GFC_Vector3D move = { 0 };
-	GFC_Vector3D offset = { 0, -1, 0 };
+	Uint8 bitmask;
+	GFC_Edge3D edge = { 0 };
+	GFC_Vector3D offset;
+	float ground_snap_offset;
+	GFC_Vector3D floor;
 
 	if (!self || !self->data)
 	{
@@ -124,38 +144,79 @@ int player_update(Entity* self)
 	}
 	data = (PlayerEntityData*)self->data;
 
+	//if (!entity_move_check((self, self->velocity)))
+	{
+		//gfc_vector3d_set()
+	}
+
+
+	
+
+	//do movement
+	gfc_vector3d_add(self->position, self->position, self->velocity);
+
+	//snap the player to the level only if they're not moving upwards
+	if (self->velocity.z > 0)
+	{
+		;
+	}
+	else
+	{
+		ground_snap_offset = self->bounds.z;
+		gfc_vector3d_copy(edge.b, self->position);
+		edge.b.z += ground_snap_offset;
+		ground_snap_offset = self->bounds.d * 0.75;
+		gfc_vector3d_copy(edge.a, edge.b);
+		edge.a.z += ground_snap_offset;
+		if (level_line_test(level_get_the(), edge, &floor))
+		{
+			self->position.z = floor.z + (-self->bounds.z); //shoudl come from stats in player config file
+			self->velocity.z = 0;
+			self->grounded = 1;
+		}
+		else {
+			self->grounded = 0;
+		}
+	}
+
+	//do any bounds checks with other entities
+	
+	
+	//then check against world bounds
+	bitmask = entity_level_bounds_enforce(self);
+	
+	//sync player rotation with the camera
 	self->rotation.z = data->cameraRotation.x + GFC_PI;
+
+	player_sync_camera(self);
+	return 1;
+}
+
+void player_sync_camera(Entity* self)
+{
+	PlayerEntityData* data;
+	GFC_Matrix4* view;
+	GFC_Vector3D camera_offset = { 0, -1, 0 };
+	
+	if (!self || !self->data)
+	{
+		return;
+	}
+	data = (PlayerEntityData*)self->data;
 
 	view = gf3d_vgraphics_get_view_matrix();
 
-	gfc_vector3d_scale(offset, offset, data->cameraFollowDistance);
-	gfc_vector3d_rotate_about_x(&offset, data->cameraRotation.y);
+	gfc_vector3d_scale(camera_offset, camera_offset, data->cameraFollowDistance);
+	gfc_vector3d_rotate_about_x(&camera_offset, data->cameraRotation.y);
 
-	gfc_vector3d_rotate_about_z(&offset, data->cameraRotation.x);
-	gfc_vector3d_add(offset, offset, self->position);
+	gfc_vector3d_rotate_about_z(&camera_offset, data->cameraRotation.x);
+	gfc_vector3d_add(camera_offset, camera_offset, self->position);
 
-	gfc_vector3d_add(self->position, self->position, self->velocity);
-
-	//setup view matrix for new position (this shoudl technically be setup after all updating is done)
+	//setup view matrix for new position
 	gfc_matrix4_view(
 		*view,
-		offset,
+		camera_offset,
 		self->position,
 		gfc_vector3d(0, 0, 1)
 	);
-
-}
-
-void player_free(Entity* self) {
-	PlayerEntityData* data;
-	if (!self || !self->data)
-	{
-		return 0;
-	}
-	
-	data = (PlayerEntityData *) self->data;
-	//clean up data
-
-	//free the data
-	self->data = NULL;
 }

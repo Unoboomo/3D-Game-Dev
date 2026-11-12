@@ -32,4 +32,9 @@ typedef struct PlayerEntityData_s
 */
 Entity* player_new(GFC_Vector3D position);
 
+/**
+* @brief get the player singleton
+*/
+Entity* player_get_the();
+
 #endif

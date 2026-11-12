@@ -53,6 +53,7 @@ int item_think(Entity* self)
 	}
 	if (entity_collision_other(self, player_get_the(), NULL))
 	{
+		//will eventually go in touch function
 		slog("give player item");
 		entity_free(self);
 		return 1;

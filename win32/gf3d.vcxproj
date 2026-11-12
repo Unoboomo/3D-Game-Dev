@@ -166,9 +166,11 @@
     <ClCompile Include="..\src\gf3d_validation.c" />
     <ClCompile Include="..\src\gf3d_vgraphics.c" />
     <ClCompile Include="..\src\gf3d_vqueues.c" />
+    <ClCompile Include="..\src\item.c" />
     <ClCompile Include="..\src\level.c" />
     <ClCompile Include="..\src\model.c" />
     <ClCompile Include="..\src\player.c" />
+    <ClCompile Include="..\src\utils.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gfc\include\gfc_actions.h" />
@@ -230,9 +232,11 @@
     <ClInclude Include="..\include\gf3d_validation.h" />
     <ClInclude Include="..\include\gf3d_vgraphics.h" />
     <ClInclude Include="..\include\gf3d_vqueues.h" />
+    <ClInclude Include="..\include\item.h" />
     <ClInclude Include="..\include\level.h" />
     <ClInclude Include="..\include\model.h" />
     <ClInclude Include="..\include\player.h" />
+    <ClInclude Include="..\include\utils.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\config\audio.cfg" />
@@ -242,6 +246,8 @@
     <None Include="..\config\overlay_pipeline.cfg" />
     <None Include="..\config\setup.cfg" />
     <None Include="..\config\sky_pipeline.cfg" />
+    <None Include="..\config\wireframe_pipeline.cfg" />
+    <None Include="..\defs\items.def" />
     <None Include="..\gfc\src\Makefile" />
     <None Include="..\levels\test_level.level" />
     <None Include="..\models\cube.json">
@@ -274,6 +280,12 @@
     <None Include="..\models\sky\sky.xcf">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </None>
+    <None Include="..\models\steve\steve.blend">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\models\steve\steve.model">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
     <None Include="..\models\susanne.json">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </None>
@@ -287,6 +299,7 @@
     <None Include="..\shaders\sprite.vert" />
     <None Include="..\shaders\sprite_frag.spv" />
     <None Include="..\shaders\sprite_vert.spv" />
+    <None Include="..\shaders\wireframe.frag" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\gfc\src\physfs_version.rc" />
@@ -319,6 +332,9 @@
     <Object Include="..\models\sky\sky.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
+    <Object Include="..\models\steve\steve.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Object>
     <Object Include="..\models\testworld.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
@@ -334,6 +350,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Image>
     <Image Include="..\models\sky\sky.png">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Image>
+    <Image Include="..\models\steve\steve.png">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Image>
   </ItemGroup>
