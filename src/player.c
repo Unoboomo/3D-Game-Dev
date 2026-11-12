@@ -4,6 +4,7 @@
 #include "gf3d_vgraphics.h"
 #include "mouse.h"
 #include "level.h"
+#include "time.h"
 #include "player.h"
 
 int player_think(Entity* self);
@@ -22,7 +23,7 @@ Entity* player_get_the()
 Entity* player_new(GFC_Vector3D position) {
 	Entity* self;
 	PlayerEntityData* data;
-
+	const char* str;
 	if (the_player)
 	{
 		return the_player;
@@ -39,6 +40,7 @@ Entity* player_new(GFC_Vector3D position) {
 	self->think = player_think;
 	self->update = player_update;
 	self->free = player_free;
+	self->team = ETT_player;
 
 	self->bounds = gfc_box(-7.16433, -4.18962, -6.57308, 14.3287, 9.0455, 10.4108);
 
@@ -50,6 +52,7 @@ Entity* player_new(GFC_Vector3D position) {
 		data->cameraRotation.y = GFC_PI/6;
 
 	}
+	gfc_line_cpy(self->name, "Player");
 	self->data = data;
 	the_player = self;
 	return self;
@@ -81,26 +84,19 @@ int player_think(Entity* self)
 		return 0;
 	}
 	data = (PlayerEntityData*)self->data;
-	/*
-	if (gfc_input_command_down("panup"))
+	
+	
+	if (gfc_input_command_down("dash"))
 	{
-		data->cameraRotation.y += 0.05;
+		time_set_time_scale(BULLET_TIME_TIME_SCALE);
 	}
-	if (gfc_input_command_down("pandown"))
+	else
 	{
-		data->cameraRotation.y -= 0.05;
+		time_set_time_scale(REAL_TIME_TIME_SCALE);
 	}
-	if (gfc_input_command_down("panright"))
-	{
-		data->cameraRotation.x -= 0.05;
-	}
-	if (gfc_input_command_down("panleft"))
-	{
-		data->cameraRotation.x += 0.05;
-	}
-	*/
 
 	mouse_update_camera(&(data->cameraRotation));
+
 	if (gfc_input_command_down("item_up"))
 	{
 		move.y = 1;
@@ -121,12 +117,18 @@ int player_think(Entity* self)
 	if (move.x || move.y)
 	{
 		gfc_vector3d_normalize(&move);
+
 		gfc_vector3d_rotate_about_z(&move, data->cameraRotation.x);
-		self->velocity = move;
+
+		//only changes in velocity (applying acceleration) should be time scaled
+		self->velocity.x = move.x * PLAYER_SPEED;
+		self->velocity.y = move.y * PLAYER_SPEED;
+
 	}
 	else
 	{
-		self->velocity = gfc_vector3d(0,0,0);
+		self->velocity.x = 0;
+		self->velocity.y = 0;
 	}
 	//gf2d_mouse_get_movement for mouse control camera
 	return 1;
@@ -140,35 +142,36 @@ int player_update(Entity* self)
 	GFC_Vector3D offset;
 	float ground_snap_offset;
 	GFC_Vector3D floor;
-
+	float scaled_delta_time;
+	GFC_Vector3D scaled_physics;
 	if (!self || !self->data)
 	{
 		return 0;
 	}
-	data = (PlayerEntityData*)self->data;
 
+	data = (PlayerEntityData*)self->data;
+	scaled_delta_time = time_get_scaled_delta();
+	slog_sync();
 	//if (!entity_move_check((self, self->velocity)))
 	{
 		//gfc_vector3d_set()
 	}
-
-
 	
-
 	//do movement
-	gfc_vector3d_add(self->position, self->position, self->velocity);
+	gfc_vector3d_scale(scaled_physics, self->velocity, scaled_delta_time);
+	gfc_vector3d_add(self->position, self->position, scaled_physics);
 
 	//snap the player to the level only if they're not moving upwards
 	if (self->velocity.z > 0)
 	{
-		;
+		self->grounded = 0;
 	}
 	else
 	{
-		ground_snap_offset = self->bounds.z;
+		ground_snap_offset = self->bounds.z - 2; //bottom of bounding box minus 2 so slopes/steps work
 		gfc_vector3d_copy(edge.b, self->position);
 		edge.b.z += ground_snap_offset;
-		ground_snap_offset = self->bounds.d * 0.75;
+		ground_snap_offset = self->bounds.d;
 		gfc_vector3d_copy(edge.a, edge.b);
 		edge.a.z += ground_snap_offset;
 		if (level_line_test(level_get_the(), edge, &floor))
@@ -183,7 +186,7 @@ int player_update(Entity* self)
 	}
 
 	//do any bounds checks with other entities
-	
+	entity_collide_all(self);
 	
 	//then check against world bounds
 	bitmask = entity_level_bounds_enforce(self);

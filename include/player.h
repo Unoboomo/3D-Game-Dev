@@ -24,7 +24,10 @@ typedef struct PlayerEntityData_s
 	//int		lives_count;
 }PlayerEntityData;
 
+#define BULLET_TIME_TIME_SCALE 0.2f
+#define REAL_TIME_TIME_SCALE 1.0f
 
+#define PLAYER_SPEED 60
 /**
 * @brief spawn a new player entity
 * @param position where to spawn it
