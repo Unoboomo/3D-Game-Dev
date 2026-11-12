@@ -126,13 +126,23 @@ Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation
  * @brief checks if an entity is outside the world bounds, given an offset from the entity's current position
  * @param self [in] the entity to check bounds against
  * @param offset [in] the offset from the current position you want to check against
+ * @param min_translation_vec [in] the vector the aabb needs to change by to not be outside the level
  * @return a bitmask representing the directions the bounding box is outside the level
  * 
- * NOTE: this is pre-move bounds checking
+ * NOTE: this is pre-move bounds checking (offset != {0}) or post-move bounds checking (pass through min_translation_vec)
+ * 
  * WARNING: can return LEVEL_BOUNDS_ERROR, check for it
  */
-Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset);
+Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset, GFC_Vector3D* min_translation_vec);
 
+/**
+ * @brief if an entity is outside the world bounds, enforce world bounds, and reset velocities if they are pointed outside the world bounds
+ * @param self [in] the entity to check bounds against
+ * @return the collision bitmask if you want to know the axis of collision
+ * 
+ * NOTE: This is post-move bounds enforcement
+ */
+Uint8 entity_level_bounds_enforce(Entity* self);
 
 /**
 * @brief updates the position of an entity from its velocity and ensures it is still in world bounds
@@ -216,12 +226,6 @@ SJson* entity_save_all_to_config();
 * @param layer the layer(s) to remove
 */
 //void entity_remove_collision_layer(Entity* self, EntityCollisionLayers layer);
-
-/**
-* @brief ensures an entity is still in the world/window/camera bounds
-* @param *self a pointer to the entity to check the bounds of
-*/
-void entity_check_world_bounds(Entity* self);
 
 /**
 * @brief checks an entity's prospective position for collision against other entities,

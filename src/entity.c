@@ -251,6 +251,15 @@ void entity_system_queue_render_all()
 
 Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation)
 {
+	//	BOX_COLLISION_NONE = 0,
+	//	BOX_COLLISION_POS_X = 1 << 0,
+	//	BOX_COLLISION_POS_Y = 1 << 1,
+	//	BOX_COLLISION_POS_Z = 1 << 2,
+	//	BOX_COLLISION_NEG_X = 1 << 3,
+	//	BOX_COLLISION_NEG_Y = 1 << 4,
+	//	BOX_COLLISION_NEG_Z = 1 << 5,
+	//	BOX_COLLISION_ERROR = 1 << 6,
+
 	GFC_Box a, b;
 
 	if ((!self) || (!other))
@@ -264,8 +273,17 @@ Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation
 	return utils_box_overlap(a, b, min_translation);
 }
 
-Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset)
+Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset, GFC_Vector3D* min_translation_vec)
 {
+	//	LEVEL_BOUNDS_NONE = 0,
+	//	LEVEL_BOUNDS_POS_X = 1 << 0,
+	//	LEVEL_BOUNDS_POS_Y = 1 << 1,
+	//	LEVEL_BOUNDS_POS_Z = 1 << 2,
+	//	LEVEL_BOUNDS_NEG_X = 1 << 3,
+	//	LEVEL_BOUNDS_NEG_Y = 1 << 4,
+	//	LEVEL_BOUNDS_NEG_Z = 1 << 5,
+	//	LEVEL_BOUNDS_ERROR = 1 << 6,
+
 	GFC_Box aabb;
 	if (!self)
 	{
@@ -275,5 +293,44 @@ Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset)
 	aabb = self->bounds;
 	gfc_vector3d_add(aabb, self->bounds, self->position);
 	gfc_vector3d_add(aabb, aabb, offset);
-	return level_bounds_check(level_get_the(), aabb);
+	return level_bounds_check(level_get_the(), aabb, min_translation_vec);
+}
+
+Uint8 entity_level_bounds_enforce(Entity* self)
+{
+	GFC_Vector3D temp = { 0 };
+	Uint8 bitmask;
+
+	bitmask = entity_level_bounds_check(self, gfc_vector3d(0, 0, 0), &temp);
+
+	if (bitmask && !(bitmask & LEVEL_BOUNDS_ERROR))
+	{
+		if ((bitmask & LEVEL_BOUNDS_POS_X) && (self->velocity.x > 0))
+		{
+			self->velocity.x = 0;
+		}
+		else if ((bitmask & LEVEL_BOUNDS_NEG_X) && (self->velocity.x < 0))
+		{
+			self->velocity.x = 0;
+		}
+		if ((bitmask & LEVEL_BOUNDS_POS_Y) && (self->velocity.y > 0))
+		{
+			self->velocity.y = 0;
+		}
+		else if ((bitmask & LEVEL_BOUNDS_NEG_Y) && (self->velocity.y < 0))
+		{
+			self->velocity.y = 0;
+		}
+		if ((bitmask & LEVEL_BOUNDS_POS_Z) && (self->velocity.z > 0))
+		{
+			self->velocity.z = 0;
+		}
+		else if ((bitmask & LEVEL_BOUNDS_NEG_Z) && (self->velocity.z < 0))
+		{
+			self->velocity.z = 0;
+		}
+		gfc_vector3d_add(self->position, self->position, temp);
+	}
+
+	return bitmask;
 }
