@@ -5,7 +5,7 @@
 #include "player.h"
 #include "item.h"
 
-int item_think(Entity* self);
+void item_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 
 Entity* spawn_item_from_def(const char* itemName, GFC_Vector3D position)
 {
@@ -39,24 +39,28 @@ Entity* spawn_item_from_def(const char* itemName, GFC_Vector3D position)
 			return NULL;
 		}
 	}
-	self->think = item_think;
+	str = sj_object_get_string(itemDef, "name");
+	if (str) {
+		gfc_line_cpy(self->name, str);
+	}
 	self->bounds = gfc_box_from_config(sj_object_get_value(itemDef, "bounds"));
 	self->position = position;
+	self->team = ETT_item;
+	self->touch = item_touch;
 	return self;
 }
 
-int item_think(Entity* self)
+void item_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
 {
-	if (!self)
+	if (!self || !other)
 	{
 		return;
 	}
-	if (entity_collision_other(self, player_get_the(), NULL))
+
+	if (entity_check_team(other, ETT_player))
 	{
-		//will eventually go in touch function
-		slog("give player item");
+		slog("give player item %s", self->name);
 		entity_free(self);
 		return 1;
 	}
-	return 0;
 }
