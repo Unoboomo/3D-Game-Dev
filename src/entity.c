@@ -1,5 +1,8 @@
 #include "simple_logger.h"
 
+#include "utils.h"
+#include "level.h"
+
 #include "entity.h"
 
 extern int __DEBUG;
@@ -92,13 +95,13 @@ void entity_free(Entity* self)
 		return;
 	}
 
-	if (self->model)
-	{
-		model_free(self->model);
-	}
 	if (self->free)
 	{
 		self->free(self);
+	}
+	if (self->model)
+	{
+		model_free(self->model);
 	}
 	memset(self, 0, sizeof(Entity));
 }
@@ -244,4 +247,33 @@ void entity_system_queue_render_all()
 		}
 		entity_queue_render(&entity_system.entity_list[i]);
 	}
+}
+
+Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation)
+{
+	GFC_Box a, b;
+
+	if ((!self) || (!other))
+	{
+		return BOX_COLLISION_ERROR;
+	}
+	a = self->bounds;
+	b = other->bounds;
+	gfc_vector3d_add(a, a, self->position);
+	gfc_vector3d_add(b, b, other->position);
+	return utils_box_overlap(a, b, min_translation);
+}
+
+Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset)
+{
+	GFC_Box aabb;
+	if (!self)
+	{
+		return LEVEL_BOUNDS_ERROR;
+	}
+
+	aabb = self->bounds;
+	gfc_vector3d_add(aabb, self->bounds, self->position);
+	gfc_vector3d_add(aabb, aabb, offset);
+	return level_bounds_check(level_get_the(), aabb);
 }

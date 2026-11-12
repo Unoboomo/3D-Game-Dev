@@ -5,6 +5,18 @@
 
 #include "model.h"
 
+typedef enum
+{
+	LEVEL_BOUNDS_NONE = 0,
+	LEVEL_BOUNDS_POS_X = 1 << 0,
+	LEVEL_BOUNDS_POS_Y = 1 << 1,
+	LEVEL_BOUNDS_POS_Z = 1 << 2,
+	LEVEL_BOUNDS_NEG_X = 1 << 3,
+	LEVEL_BOUNDS_NEG_Y = 1 << 4,
+	LEVEL_BOUNDS_NEG_Z = 1 << 5,
+	LEVEL_BOUNDS_ERROR = 1 << 6,
+}LevelBoundsCollisionType;
+
 typedef struct
 {
 	Model* sky;
@@ -54,10 +66,19 @@ Level* level_get_the();
 * @brief check if the bounding box provided is clipping or outside the level bounds
 * @param level the level to check the bounding box against
 * @param aabb the axis aligned bounding box we check against the level
-* @return 1 if the bounding box is outside the level bounds, 0 otherwise or on error
+* @return a bitmask representing the directions the bounding box is outside the level
+* 
+* WARNING: can return LEVEL_BOUNDS_ERROR, check for it
 */
-int level_bounds_check(Level* level, GFC_Box aabb);
+Uint8 level_bounds_check(Level* level, GFC_Box aabb);
 
+/**
+ * @brief Tests a 3D line segment for collision against the level
+ * @param level: [in] pointer to the level to check the edge against 
+ * @param edge: [in] the edge to check agains thte level
+ * @param contact_point: [out] optional pointer to store where the hit location is
+ * @return 1 if an collision occured, 0 otherwise
+ */
 Uint8 level_line_test(Level* level, GFC_Edge3D edge, GFC_Vector3D* contact_point);
 
 #endif 

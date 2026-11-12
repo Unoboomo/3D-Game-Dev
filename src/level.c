@@ -139,42 +139,45 @@ void level_queue_render(Level* level)
 	}
 }
 
-int level_bounds_check(Level* level, GFC_Box aabb)
+Uint8 level_bounds_check(Level* level, GFC_Box aabb)
 {
 	//in the future, return a bitmask so you can determine what directions you collide in
 	// use uint8: +x, +y, +z, -x, -y, -z, unused, unused bitmask
 	// aabb -> axis aligned bounding box
-	if (!level)
+	Uint8 bitmask = 0;
+
+	if (!level || level->bounds.w <= 0 || !level->bounds.h <= 0|| !level->bounds.d<= 0 || 
+		aabb.w <= 0 || aabb.h <= 0 || aabb.d <= 0)
 	{
-		return 0;
+		return LEVEL_BOUNDS_ERROR;
 	}
 
 	if (aabb.x < level->bounds.x)
 	{
-		return 1;
+		bitmask |= LEVEL_BOUNDS_NEG_X;
 	}
 	if (aabb.y < level->bounds.y)
 	{
-		return 1;
+		bitmask |= LEVEL_BOUNDS_NEG_Y;
 	}
 	if (aabb.z < level->bounds.z)
 	{
-		return 1;
+		bitmask |= LEVEL_BOUNDS_NEG_Z;
 	}
 	if (aabb.x + aabb.w > level->bounds.x + level->bounds.w)
 	{
-		return 1;
+		bitmask |= LEVEL_BOUNDS_POS_X;
 	}
 	if (aabb.y + aabb.h > level->bounds.y + level->bounds.h)
 	{
-		return 1;
+		bitmask |= LEVEL_BOUNDS_POS_Y;
 	}
 	if (aabb.z + aabb.d > level->bounds.z + level->bounds.d)
 	{
-		return 1;
+		bitmask |= LEVEL_BOUNDS_POS_Z;
 	}
 
-	return 0;
+	return bitmask;
 }
 
 Uint8 level_line_test(Level* level, GFC_Edge3D edge, GFC_Vector3D* contact)

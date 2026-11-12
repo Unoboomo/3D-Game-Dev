@@ -30,16 +30,19 @@
 
 typedef struct Entity_s
 {
-	Uint8					_inuse;								//memory management flag
+	Uint8					_inuse;				//memory management flag
 
-	//Uint8					player;								//1 if player, 0 otherwise
+	//Uint8					player;				//1 if player, 0 otherwise
 
-	Model *model;							//graphical representation of the entity
+	Model *model;								//graphical representation of the entity
 
+	GFC_Box			bounds;
+	GFC_Vector3D	position;					//the position of the entity in space (the entity is centered on this point)
+	GFC_Vector3D	velocity;					//how fast the entity is moving
+	GFC_Vector3D	acceleration;				//how fast the velocity changes 
 
-	GFC_Vector3D	position;				//the position of the entity in space (the entity is centered on this point)
-	GFC_Vector3D	velocity;				//how fast the entity is moving
-	GFC_Vector3D	acceleration;			//how fast the velocity changes 
+	float floorHeight;							//point directly below us
+	Uint8 grounded;								//is the entity on the floor?
 
 	GFC_Vector3D rotation;	//x - pitch (around sideways vector), y - roll (around forward vector), z - yaw (around up vector)
 
@@ -50,13 +53,13 @@ typedef struct Entity_s
 
 
 	
-	int		(*think)(struct Entity_s* self);														//pointer to a think function
-	int		(*update)(struct Entity_s* self);														//pointer to a update function (all entities can think based on the same gamestate, then update all)
+	int		(*think)(struct Entity_s* self);	//pointer to a think function
+	int		(*update)(struct Entity_s* self);	//pointer to a update function (all entities can think based on the same gamestate, then update all)
 	int		(*draw)(struct Entity_s* self);
-	void	(*free)(struct Entity_s* self);															//pointer to a free function
+	void	(*free)(struct Entity_s* self);		//pointer to a free function
 
 
-	void				(*touch)(struct Entity_s* self, struct Entity_s* other, GFC_Vector2D collision_side);	//pointer to a touch function 
+	//void	(*touch)(struct Entity_s* self, struct Entity_s* other, GFC_Vector2D collision_side);	//pointer to a touch function 
 
 	void* data;								//the storage for unique entity type data, (if set, you must specify a free function)			
 }Entity;
@@ -70,7 +73,7 @@ void entity_system_init(Uint32 max);
 
 /**
 * @breif allocates a new empty entity
-* @reurn NULL on error, or a blank entity
+* @return NULL on error, or a blank entity
 */
 Entity* entity_new();
 
@@ -82,13 +85,13 @@ void entity_free(Entity* self);
 
 /**
 * @brief queue render an entity
-* @param *self a pointer to the entity queue render
+* @param *self a pointer to the entity to queue render
 */
 void entity_queue_render(Entity* self);
 
 /**
 * @brief free all entities in the manager
-* does not close the entity manager
+* @note does not close the entity manager
 */
 void entity_system_free_all();
 
@@ -106,6 +109,30 @@ void entity_system_think_all();
 * @brief queue render all entities in the manager
 */
 void entity_system_queue_render_all();
+
+/**
+ * @brief check if two entities are colliding
+ * @param self: [in] the entity doing the checking, collision directions are with respect to this entity 
+ * @param other: [in] the entity we check against
+ * @param min_translation: [out] the minimum translation needed to apply to a to make a and b not collide
+ * @return a bitmask encoding the direction collision occured
+ * 
+ * NOTE: this is post-move bounds checking
+ * WARNING: can return BOX_COLLISION_ERROR, check for it
+ */
+Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation);
+
+/**
+ * @brief checks if an entity is outside the world bounds, given an offset from the entity's current position
+ * @param self [in] the entity to check bounds against
+ * @param offset [in] the offset from the current position you want to check against
+ * @return a bitmask representing the directions the bounding box is outside the level
+ * 
+ * NOTE: this is pre-move bounds checking
+ * WARNING: can return LEVEL_BOUNDS_ERROR, check for it
+ */
+Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset);
+
 
 /**
 * @brief updates the position of an entity from its velocity and ensures it is still in world bounds
