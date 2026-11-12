@@ -55,7 +55,7 @@ void mouse_system_init()
 void mouse_system_close()
 {
 	memset(&mouse_system, 0, sizeof(MouseSystem));
-	if (__DEBUG)slog("entity system closed");
+	if (__DEBUG)slog("mouse system closed");
 }
 
 
@@ -113,6 +113,10 @@ float mouse_clamp_pitch(float angle)
 void mouse_update_camera(GFC_Vector3D* camera_rotation)
 {
 	int deltaX, deltaY;
+	if (!camera_rotation)
+	{
+		return;
+	}
 	SDL_GetRelativeMouseState(&deltaX, &deltaY);
 
 	camera_rotation->x = mouse_clamp_yaw(camera_rotation->x - mouse_system.sensitivity * deltaX);
