@@ -11,14 +11,14 @@
 
 #include "model.h"
 
-//typedef enum { //entities of the same type do not collide with each other
-//	ETT_none,
-//	ETT_player,
-//	ETT_monster,
-//	ETT_item,
-//	ETT_world,
-//	ETT_MAX
-//}EntityTeamType;
+typedef enum { //entities of the same type do not collide with each other
+	ETT_none = 0,
+	ETT_player = 1 << 0,
+	ETT_monster = 1 << 1,
+	ETT_item = 1 << 2,
+	ETT_world = 1 << 3,
+	ETT_MAX = 1 << 4,
+}EntityTeamType;
 
 //typedef enum {
 //	ECL_none = 0,
@@ -33,6 +33,10 @@ typedef struct Entity_s
 	Uint8					_inuse;				//memory management flag
 
 	//Uint8					player;				//1 if player, 0 otherwise
+
+	GFC_TextLine			name;								//name of the entity for debugging
+	EntityTeamType			team;								//which team this entity is on
+
 
 	Model *model;								//graphical representation of the entity
 
@@ -58,8 +62,14 @@ typedef struct Entity_s
 	int		(*draw)(struct Entity_s* self);
 	void	(*free)(struct Entity_s* self);		//pointer to a free function
 
-
-	//void	(*touch)(struct Entity_s* self, struct Entity_s* other, GFC_Vector2D collision_side);	//pointer to a touch function 
+	/**
+	 * @brief function called when this entity touches another entity
+	 * @param self: [in] the entity who owns the touch function
+	 * @param other: [in] the entity that collided with self
+	 * @param collision_bitmask: [in] the collision face relative to self 
+	 * @param min_translation_vec: [in] the minimum translation needed to apply to self to make self and other not collide
+	 */
+	void	(*touch)(struct Entity_s* self, struct Entity_s* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);	
 
 	void* data;								//the storage for unique entity type data, (if set, you must specify a free function)			
 }Entity;
@@ -114,13 +124,13 @@ void entity_system_queue_render_all();
  * @brief check if two entities are colliding
  * @param self: [in] the entity doing the checking, collision directions are with respect to this entity 
  * @param other: [in] the entity we check against
- * @param min_translation: [out] the minimum translation needed to apply to a to make a and b not collide
+ * @param min_translation: [out] the minimum translation needed to apply to self to make self and other not collide
  * @return a bitmask encoding the direction collision occured
  * 
  * NOTE: this is post-move bounds checking
  * WARNING: can return BOX_COLLISION_ERROR, check for it
  */
-Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation);
+Uint8 entity_collision_other(Entity* self, Entity* other, GFC_Vector3D *min_translation);
 
 /**
  * @brief checks if an entity is outside the world bounds, given an offset from the entity's current position
@@ -145,17 +155,36 @@ Uint8 entity_level_bounds_check(Entity* self, GFC_Vector3D offset, GFC_Vector3D*
 Uint8 entity_level_bounds_enforce(Entity* self);
 
 /**
+* @brief checks if the entity's team matches with another team
+* @param *self a pointer to the entity to check the team of
+* @param team the team to check against
+* @return the matching bitmask (will be 0 if no overlap, a non-zero otherwise)
+*/
+Uint8 entity_check_team(Entity* self, EntityTeamType team);
+
+/**
+* @brief checks an entity's prospective position for collision against other entities,
+* @param *self a pointer to the entity to check with
+*/
+void entity_collide_all(Entity* self);
+
+/**
 * @brief updates the position of an entity from its velocity and ensures it is still in world bounds
 * @param *self a pointer to the entity to update the position of
 */
 void entity_update_position(Entity* self);
 
-
-
-
-
-
-
+/**
+ * @brief
+ * @param self: [in] the entity doing the checking, collision_bitmask directions are with respect to this entity
+ * @param other: [in] the entity we check against
+ * @param min_translation: [in] the minimum translation needed to apply to self to make self and other not collide
+ * @param collision_bitmask: [in] a bitmask encoding the direction collision occured
+ *
+ * NOTE: this is post-move bounds checking
+ * WARNING: can return BOX_COLLISION_ERROR, check for it
+ */
+void entity_collide_with_world_entity_physics_resolve(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 
 void entity_system_free_all_but_player();
 
@@ -197,13 +226,7 @@ SJson* entity_save_all_to_config();
 
 
 
-/**
-* @brief checks if the entity's team matches with another team
-* @param *self a pointer to the entity to check the team of
-* @param team the team to check against
-* @return the matching bitmask (will be 0 if no overlap, a non-zero otherwise)
-*/
-//Uint8 entity_check_team(Entity* self, EntityTeamType team);
+
 
 /**
 * @brief checks the entity layers collide with the other layers
@@ -226,12 +249,6 @@ SJson* entity_save_all_to_config();
 * @param layer the layer(s) to remove
 */
 //void entity_remove_collision_layer(Entity* self, EntityCollisionLayers layer);
-
-/**
-* @brief checks an entity's prospective position for collision against other entities,
-* @param *self a pointer to the entity to check with
-*/
-void entity_collide_all(Entity* self);
 
 /**
 * @brief gets a list of all entitys with a specific entity_name

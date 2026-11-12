@@ -249,7 +249,7 @@ void entity_system_queue_render_all()
 	}
 }
 
-Uint8 entity_collision_other(Entity* self, Entity* other, float *min_translation)
+Uint8 entity_collision_other(Entity* self, Entity* other, GFC_Vector3D *min_translation)
 {
 	//	BOX_COLLISION_NONE = 0,
 	//	BOX_COLLISION_POS_X = 1 << 0,
@@ -333,4 +333,117 @@ Uint8 entity_level_bounds_enforce(Entity* self)
 	}
 
 	return bitmask;
+}
+
+Uint8 entity_check_team(Entity* self, EntityTeamType team) {
+	if (!self) {
+		return ETT_none;
+	}
+	return self->team & team;
+}
+
+void entity_collide_all(Entity* self)
+{
+	int i;
+	Entity* other;
+	GFC_Vector3D min_translation, other_min_translation;
+	Uint8 bitmask, other_bitmask;
+	if (!self || !self->_inuse)
+	{
+		return;
+	}
+
+	for (i = 0; i < entity_system.entity_count; i++)
+	{
+
+
+		other = &entity_system.entity_list[i];
+		if (!other->_inuse || self == other)
+		{
+			continue;
+		}
+
+
+		//if on the same team, dont collide (for now)
+		if (entity_check_team(self, other->team))
+		{ 
+			continue;
+		}
+
+		//if (entity_check_layer()) {}
+
+		//do collision check
+		bitmask = entity_collision_other(self, other, &min_translation);
+		if (bitmask && !(bitmask & BOX_COLLISION_ERROR)) //we had a collision;
+		{
+
+			//its a world collision, treat it as such
+			if (entity_check_team(other, ETT_world))
+			{
+				//first, move self out of other entity
+				gfc_vector3d_add(self->position, self->position, min_translation);
+
+				//we collided in the x direction
+				if ((bitmask & BOX_COLLISION_POS_X) && self->velocity.x > 0)
+				{
+					self->velocity.x = 0;
+					self->acceleration.x = 0;
+
+					//wall run shennanigans
+				}
+				else if ((bitmask & BOX_COLLISION_NEG_X) && self->velocity.x < 0)
+				{
+					self->velocity.x = 0;
+					self->acceleration.x = 0;
+
+					//wall run shennaniganss
+				}
+				if ((bitmask & BOX_COLLISION_POS_Y) && self->velocity.y > 0)
+				{
+					self->velocity.y = 0;
+					self->acceleration.y = 0;
+
+					//wall run shennanigans
+				}
+				else if ((bitmask & BOX_COLLISION_NEG_Y) && self->velocity.y < 0)
+				{
+					self->velocity.y = 0;
+					self->acceleration.y = 0;
+
+					//wall run shennaniganss
+				}
+				if ((bitmask & BOX_COLLISION_POS_Z) && self->velocity.z > 0) // we hit the top of our head
+				{
+					self->velocity.z = 0;
+					self->acceleration.z = 0;
+					self->grounded = 0;
+				}
+				if ((bitmask & BOX_COLLISION_NEG_Z) && self->velocity.z <= 0) // we hit our feet
+				{
+					self->velocity.z = 0;
+					self->acceleration.z = 0;
+					self->grounded = 1;
+				}
+			}
+			if (self->touch)
+			{
+				self->touch(self, other, bitmask, min_translation);
+			}
+			if (!self->_inuse)
+			{
+				return;
+			}
+
+			if (other->_inuse && other->touch)
+			{
+				other_bitmask = utils_invert_bitmask(bitmask);
+				gfc_vector3d_negate(other_min_translation, min_translation);
+				other->touch(other, self, other_bitmask, other_min_translation);
+			}
+		}
+		else if (bitmask & BOX_COLLISION_ERROR)
+		{
+			slog("collision error between %s and %s", self->name, other->name);
+		}
+	}
 }
