@@ -161,4 +161,10 @@ SDL_Surface *gf3d_vgraphics_create_surface(Uint32 w,Uint32 h);
  */
 SDL_Surface *gf3d_vgraphics_screen_convert(SDL_Surface **surface);
 
+/**
+ * @brief get the sdl window
+ * @return the sdl window
+ */
+SDL_Window* gf3d_vgraphics_get_window();
+
 #endif

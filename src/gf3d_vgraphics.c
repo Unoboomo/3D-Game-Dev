@@ -699,6 +699,9 @@ GFC_Vector3D vgraphics_3d_position_to_screen_depth(GFC_Vector3D position)
     return out;
 }
 
-
+SDL_Window* gf3d_vgraphics_get_window()
+{
+    return gf3d_vgraphics.main_window;
+}
 /*eol@eof*/
 

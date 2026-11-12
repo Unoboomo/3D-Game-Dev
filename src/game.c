@@ -26,6 +26,7 @@
 #include "item.h"
 #include "player.h"
 #include "level.h"
+#include "mouse.h"
 
 extern int __DEBUG;
 
@@ -33,8 +34,29 @@ static int _done = 0;
 static Uint32 frame_delay = 33;
 static float fps = 0;
 
+typedef enum
+{
+    GAME_PAUSED = 0,
+    GAME_PLAYING = 1,
+}GameState;
+
 void parse_arguments(int argc,char *argv[]);
 void game_frame_delay();
+/**
+ * @brief pauses the game state
+ * @return a paused GameState
+ * 
+ * WARNING: only call during game init
+ */
+GameState game_pause();
+/**
+ * @brief plays the game state
+ * @return a paused GameState
+ * 
+ * WARNING: only call after game init
+ */
+GameState game_play();
+
 
 void exitGame()
 {
@@ -48,6 +70,7 @@ int main(int argc,char *argv[])
     Level* level;
     Sprite *bg;
     GFC_Matrix4 * view;
+    GameState game_state;
 
     //initializtion    
     parse_arguments(argc,argv);
@@ -63,8 +86,10 @@ int main(int argc,char *argv[])
     //gfc_sound_init_config("config/audio.cfg");
     gf2d_font_init("config/font.cfg");
     gf2d_actor_init(1000);
+    gfc_config_def_load("config/mouse.cfg");
     gfc_config_def_load("defs/items.def");
     entity_system_init(1000);
+    mouse_system_init();
 
     //game init
     srand(SDL_GetTicks());
@@ -74,17 +99,33 @@ int main(int argc,char *argv[])
     level = level_load_from_file("levels/test_level.level");
     player_new(gfc_vector3d(0, 0, 0));
     spawn_item_from_def("Steve", gfc_vector3d(195, 195, 1));
+
+    game_state = game_play();
     // main game loop    
     while(!_done)
     {
         gfc_input_update();
+        if (gfc_input_command_pressed("cancel"))
+        {
+            if (game_state == GAME_PLAYING)
+            {
+                game_state = game_pause();
+            }
+            else
+            {
+                game_state = game_play();
+            }
+        }
+
         gf2d_mouse_update();
         gf2d_font_update();
         //camera updates
 
-        
-        entity_system_think_all();
-        entity_system_update_all();
+        if (game_state == GAME_PLAYING)
+        {
+            entity_system_think_all();
+            entity_system_update_all();
+        }
 
         gf3d_vgraphics_render_start();
                 //3D draws
@@ -139,4 +180,27 @@ void game_frame_delay()
     fps = 1000.0/MAX(SDL_GetTicks() - then,0.001);
 //     slog("fps: %f",fps);
 }
+
+GameState game_pause()
+{
+    int width, height;
+    SDL_Window* win = gf3d_vgraphics_get_window();
+    SDL_SetWindowGrab(win, SDL_FALSE);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_GetWindowSize(win, &width, &height);
+    SDL_WarpMouseInWindow(win, width / 2, height / 2);
+    gf2d_mouse_update();
+    gf2d_mouse_show();
+    return GAME_PAUSED;
+}
+
+GameState game_play()
+{
+    SDL_SetWindowGrab(gf3d_vgraphics_get_window(), SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    gf2d_mouse_hide();
+    SDL_GetRelativeMouseState(NULL, NULL);
+    return GAME_PLAYING;
+}
+
 /*eol@eof*/

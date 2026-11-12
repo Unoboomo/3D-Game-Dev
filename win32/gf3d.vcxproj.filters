@@ -345,6 +345,9 @@
     <ClCompile Include="..\src\utils.c">
       <Filter>Source Files\game</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\mouse.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\gf2d_actor.h">
@@ -539,6 +542,9 @@
     <ClInclude Include="..\include\utils.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\mouse.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\config\audio.cfg">
@@ -645,6 +651,9 @@
     </None>
     <None Include="..\shaders\wireframe.frag">
       <Filter>shaders</Filter>
+    </None>
+    <None Include="..\config\mouse.cfg">
+      <Filter>config</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

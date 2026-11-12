@@ -2,8 +2,9 @@
 
 #include "gfc_input.h"
 #include "gf3d_vgraphics.h"
-#include "player.h"
+#include "mouse.h"
 #include "level.h"
+#include "player.h"
 
 int player_think(Entity* self);
 int player_update(Entity* self);
@@ -80,7 +81,7 @@ int player_think(Entity* self)
 		return 0;
 	}
 	data = (PlayerEntityData*)self->data;
-	
+	/*
 	if (gfc_input_command_down("panup"))
 	{
 		data->cameraRotation.y += 0.05;
@@ -97,7 +98,9 @@ int player_think(Entity* self)
 	{
 		data->cameraRotation.x += 0.05;
 	}
+	*/
 
+	mouse_update_camera(&(data->cameraRotation));
 	if (gfc_input_command_down("item_up"))
 	{
 		move.y = 1;
