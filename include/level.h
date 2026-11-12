@@ -64,13 +64,14 @@ Level* level_get_the();
 
 /**
 * @brief check if the bounding box provided is clipping or outside the level bounds
-* @param level the level to check the bounding box against
-* @param aabb the axis aligned bounding box we check against the level
+* @param level [in] the level to check the bounding box against
+* @param aabb [in] the axis aligned bounding box we check against the level
+* @param min_translation_vec [in] the vector the aabb needs to change by to not be outside the level
 * @return a bitmask representing the directions the bounding box is outside the level
 * 
 * WARNING: can return LEVEL_BOUNDS_ERROR, check for it
 */
-Uint8 level_bounds_check(Level* level, GFC_Box aabb);
+Uint8 level_bounds_check(Level* level, GFC_Box aabb, GFC_Vector3D *min_translation_vec);
 
 /**
  * @brief Tests a 3D line segment for collision against the level

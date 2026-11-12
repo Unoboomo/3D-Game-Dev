@@ -139,15 +139,34 @@ void level_queue_render(Level* level)
 	}
 }
 
-Uint8 level_bounds_check(Level* level, GFC_Box aabb)
+Uint8 level_bounds_check(Level* level, GFC_Box aabb, GFC_Vector3D* min_translation_vec)
 {
 	//in the future, return a bitmask so you can determine what directions you collide in
 	// use uint8: +x, +y, +z, -x, -y, -z, unused, unused bitmask
 	// aabb -> axis aligned bounding box
-	Uint8 bitmask = 0;
+	
 
-	if (!level || level->bounds.w <= 0 || !level->bounds.h <= 0|| !level->bounds.d<= 0 || 
-		aabb.w <= 0 || aabb.h <= 0 || aabb.d <= 0)
+	//	LEVEL_BOUNDS_NONE = 0,
+	//	LEVEL_BOUNDS_POS_X = 1 << 0,
+	//	LEVEL_BOUNDS_POS_Y = 1 << 1,
+	//	LEVEL_BOUNDS_POS_Z = 1 << 2,
+	//	LEVEL_BOUNDS_NEG_X = 1 << 3,
+	//	LEVEL_BOUNDS_NEG_Y = 1 << 4,
+	//	LEVEL_BOUNDS_NEG_Z = 1 << 5,
+	//	LEVEL_BOUNDS_ERROR = 1 << 6,
+
+	Uint8 bitmask = 0;
+	float level_max;
+	float box_max;
+
+
+	if (min_translation_vec)
+	{
+		*min_translation_vec = gfc_vector3d(0, 0, 0);
+	}
+
+	if (!level || level->bounds.w <= 0 || level->bounds.h <= 0 || level->bounds.d <= 0 || aabb.w <= 0 || aabb.h <= 0 || 
+		aabb.d <= 0 || aabb.w > level->bounds.w || aabb.h > level->bounds.h || aabb.d > level->bounds.d)
 	{
 		return LEVEL_BOUNDS_ERROR;
 	}
@@ -155,26 +174,65 @@ Uint8 level_bounds_check(Level* level, GFC_Box aabb)
 	if (aabb.x < level->bounds.x)
 	{
 		bitmask |= LEVEL_BOUNDS_NEG_X;
+		if (min_translation_vec)
+		{
+			min_translation_vec->x = level->bounds.x - aabb.x;
+		}
+	}
+	else 
+	{
+		box_max = aabb.x + aabb.w;
+		level_max = level->bounds.x + level->bounds.w;
+		if (box_max > level_max)
+		{
+			bitmask |= LEVEL_BOUNDS_POS_X;
+			if (min_translation_vec)
+			{
+				min_translation_vec->x = level_max - box_max;
+			}
+		}
 	}
 	if (aabb.y < level->bounds.y)
 	{
 		bitmask |= LEVEL_BOUNDS_NEG_Y;
+		if (min_translation_vec)
+		{
+			min_translation_vec->y = level->bounds.y - aabb.y;
+		}
+	}
+	else
+	{
+		box_max = aabb.y + aabb.h;
+		level_max = level->bounds.y + level->bounds.h;
+		if (box_max > level_max)
+		{
+			bitmask |= LEVEL_BOUNDS_POS_Y;
+			if (min_translation_vec)
+			{
+				min_translation_vec->y = level_max - box_max;
+			}
+		}
 	}
 	if (aabb.z < level->bounds.z)
 	{
 		bitmask |= LEVEL_BOUNDS_NEG_Z;
+		if (min_translation_vec)
+		{
+			min_translation_vec->z = level->bounds.z - aabb.z;
+		}
 	}
-	if (aabb.x + aabb.w > level->bounds.x + level->bounds.w)
+	else
 	{
-		bitmask |= LEVEL_BOUNDS_POS_X;
-	}
-	if (aabb.y + aabb.h > level->bounds.y + level->bounds.h)
-	{
-		bitmask |= LEVEL_BOUNDS_POS_Y;
-	}
-	if (aabb.z + aabb.d > level->bounds.z + level->bounds.d)
-	{
-		bitmask |= LEVEL_BOUNDS_POS_Z;
+		box_max = aabb.z + aabb.d;
+		level_max = level->bounds.z + level->bounds.d;
+		if (box_max > level_max)
+		{
+			bitmask |= LEVEL_BOUNDS_POS_Z;
+			if (min_translation_vec)
+			{
+				min_translation_vec->z = level_max - box_max;
+			}
+		}
 	}
 
 	return bitmask;
