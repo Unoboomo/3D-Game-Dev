@@ -26,12 +26,13 @@
 #include "item.h"
 #include "player.h"
 #include "level.h"
+#include "time.h"
 #include "mouse.h"
 
 extern int __DEBUG;
 
 static int _done = 0;
-static Uint32 frame_delay = 33;
+static Uint32 frame_delay = 16;
 static float fps = 0;
 
 typedef enum
@@ -68,8 +69,7 @@ int main(int argc,char *argv[])
 {
     //local variables
     Level* level;
-    Sprite *bg;
-    GFC_Matrix4 * view;
+    //Sprite *bg;
     GameState game_state;
 
     //initializtion    
@@ -90,11 +90,12 @@ int main(int argc,char *argv[])
     gfc_config_def_load("defs/items.def");
     entity_system_init(1000);
     mouse_system_init();
+    time_system_init();
 
     //game init
     srand(SDL_GetTicks());
     slog_sync();
-    bg = gf2d_sprite_load_image("images/bg_flat.png");
+    //bg = gf2d_sprite_load_image("images/bg_flat.png");
     gf2d_mouse_load("actors/mouse.actor");
     level = level_load_from_file("levels/test_level.level");
     player_new(gfc_vector3d(0, 0, 0));
@@ -104,6 +105,7 @@ int main(int argc,char *argv[])
     // main game loop    
     while(!_done)
     {
+        time_frame_update();
         gfc_input_update();
         if (gfc_input_command_pressed("cancel"))
         {
@@ -135,6 +137,10 @@ int main(int argc,char *argv[])
                 //get rid of the background image
                 //gf2d_sprite_draw_image(bg,gfc_vector2d(0,0));
                 
+                if (game_state == GAME_PAUSED)
+                {
+                    gf2d_font_draw_line_tag("Game is paused", FT_H1, GFC_COLOR_RED, gfc_vector2d(50, 50));
+                }
                 gf2d_font_draw_line_tag("ALT+F4 to exit",FT_H1,GFC_COLOR_WHITE, gfc_vector2d(10,10));
                 gf2d_mouse_draw();
         gf3d_vgraphics_render_end();
