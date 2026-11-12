@@ -33,6 +33,13 @@ typedef enum
  * 
  * SEE: BoxCollisionType in utils.h
  */
-Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, float *min_translation);
+Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, GFC_Vector3D *min_translation);
+
+/**
+ * @brief inverts the collision directions of a bitmask
+ * @param bitmask: [in] the bitmask to invert
+ * @return the inverted bitmask
+ */
+Uint8 utils_invert_bitmask(Uint8 bitmask);
 
 #endif 

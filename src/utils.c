@@ -4,7 +4,7 @@
 
 #include "utils.h"
 
-Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, float* min_translation)
+Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, GFC_Vector3D* min_translation)
 {
     
     float overlap_pos_x;
@@ -23,7 +23,7 @@ Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, float* min_translation)
 
     if (min_translation)
     {
-        *min_translation = 0;
+        *min_translation = gfc_vector3d(0,0,0);
     }
 
     if (a.w <= 0 || a.h <= 0 || a.d <= 0 || b.w <= 0 || b.h <= 0 || b.d <= 0)
@@ -103,10 +103,10 @@ Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, float* min_translation)
     {
         if (min_translation)
         {
-            *min_translation = x_collision_overlap;
+            *min_translation = gfc_vector3d(x_collision_overlap, 0, 0);
             if (x_collision_direction & BOX_COLLISION_POS_X)
             {
-                *min_translation *= -1;
+                min_translation->x *= -1;
             }
         }
         return x_collision_direction;
@@ -115,10 +115,10 @@ Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, float* min_translation)
     {
         if (min_translation)
         {
-            *min_translation = y_collision_overlap;
+            *min_translation = gfc_vector3d(0, y_collision_overlap, 0);
             if (y_collision_direction & BOX_COLLISION_POS_Y)
             {
-                *min_translation *= -1;
+                min_translation->y *= -1;
             }
         }
         return y_collision_direction;
@@ -127,12 +127,50 @@ Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, float* min_translation)
     {
         if (min_translation)
         {
-            *min_translation = z_collision_overlap;
+            *min_translation = gfc_vector3d(0, 0, z_collision_overlap);
             if (z_collision_direction & BOX_COLLISION_POS_Z)
             {
-                *min_translation *= -1;
+                min_translation->z *= -1;
             }
         }
         return z_collision_direction;
     }
+}
+
+Uint8 utils_invert_bitmask(Uint8 bitmask)
+{
+    Uint8 inverted_bitmask = 0;
+    if (bitmask & BOX_COLLISION_POS_X)
+    {
+        inverted_bitmask |= BOX_COLLISION_NEG_X;
+    }
+    if (bitmask & BOX_COLLISION_NEG_X)
+    {
+        inverted_bitmask |= BOX_COLLISION_POS_X;
+    }
+
+    if (bitmask & BOX_COLLISION_POS_Y)
+    {
+        inverted_bitmask |= BOX_COLLISION_NEG_Y;
+    }
+    if (bitmask & BOX_COLLISION_NEG_Y)
+    {
+        inverted_bitmask |= BOX_COLLISION_POS_Y;
+    }
+
+    if (bitmask & BOX_COLLISION_POS_Z)
+    {
+        inverted_bitmask |= BOX_COLLISION_NEG_Z;
+    }
+    if (bitmask & BOX_COLLISION_NEG_Z)
+    {
+        inverted_bitmask |= BOX_COLLISION_POS_Z;
+    }
+
+    if (bitmask & BOX_COLLISION_ERROR)
+    {
+        inverted_bitmask |= BOX_COLLISION_ERROR;
+    }
+
+    return inverted_bitmask;
 }
