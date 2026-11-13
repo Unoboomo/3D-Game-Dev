@@ -55,6 +55,9 @@ Entity* player_new(GFC_Vector3D position) {
 		data->cameraRotation.y = GFC_PI/6;
 		data->cameraFocusOffset.z = self->bounds.d * 0.6;
 
+		data->max_air_jumps = PLAYER_MAX_AIR_JUMPS;
+		data->jumps_remaining = PLAYER_MAX_AIR_JUMPS;
+		data->jumped_this_frame = 0;
 	}
 	gfc_line_cpy(self->name, "Player");
 	self->data = data;
@@ -78,6 +81,11 @@ void player_free(Entity* self) {
 	the_player = NULL;
 }
 
+/**
+ * @brief determines the player's desiered inputs
+ * @param self: [in] the pointer to the player entity
+ * @return 1 if the entity has completed all thinking, 0 if default thinking is also desired
+ */
 int player_think(Entity* self)
 {
 	GFC_Vector3D move = { 0 };
@@ -85,11 +93,11 @@ int player_think(Entity* self)
 
 	if (!self || !self->data)
 	{
-		return 0;
+		return 1;
 	}
 	data = (PlayerEntityData*)self->data;
 	
-	
+	//will eventually wrap this in if !grounded
 	if (gfc_input_command_down("dash"))
 	{
 		time_set_time_scale(BULLET_TIME_TIME_SCALE);
@@ -99,23 +107,34 @@ int player_think(Entity* self)
 		time_set_time_scale(REAL_TIME_TIME_SCALE);
 	}
 
+	if (gfc_input_command_released("dash"))
+	{
+		data->dashed_this_frame = 1;
+	}
+	//end of wrap
+
+	if (gfc_input_command_pressed("jump"))
+	{
+		data->jumped_this_frame = 1;
+	}
+
 	mouse_update_camera(&(data->cameraRotation));
 
 	if (gfc_input_command_down("item_up"))
 	{
-		move.y = 1;
+		move.y += 1;
 	}
 	if (gfc_input_command_down("item_down"))
 	{
-		move.y = -1;
+		move.y += -1;
 	}
 	if (gfc_input_command_down("item_right"))
 	{
-		move.x = 1;
+		move.x += 1;
 	}
 	if (gfc_input_command_down("item_left"))
 	{
-		move.x = -1;
+		move.x += -1;
 	}
 	
 	if (move.x || move.y)
@@ -124,15 +143,12 @@ int player_think(Entity* self)
 
 		gfc_vector3d_rotate_about_z(&move, data->cameraRotation.x);
 
-		//only changes in velocity (applying acceleration) should be time scaled
-		self->velocity.x = move.x * PLAYER_SPEED;
-		self->velocity.y = move.y * PLAYER_SPEED;
+		gfc_vector3d_copy(data->wish_direction, move);
 
 	}
 	else
 	{
-		self->velocity.x = 0;
-		self->velocity.y = 0;
+		gfc_vector3d_copy(data->wish_direction, gfc_vector3d(0,0,0));
 	}
 	//gf2d_mouse_get_movement for mouse control camera
 	return 1;
@@ -148,39 +164,151 @@ int player_update(Entity* self)
 	GFC_Vector3D floor;
 	float scaled_delta_time;
 	GFC_Vector3D scaled_physics;
+
+	float friction;
+	float friction_multiplier;
+	float acceleration;
+	float speed_soft_cap;
+	float current_wish_direction_speed;
+	float speed_difference;
+	float acceleration_speed;
+
 	if (!self || !self->data)
 	{
 		return 0;
 	}
-
 	data = (PlayerEntityData*)self->data;
+
 	scaled_delta_time = time_get_scaled_delta();
-	slog_sync();
-	//if (!entity_move_check((self, self->velocity)))
+
+	//Start Movement calculations:
+
+	if (self->grounded)
 	{
-		//gfc_vector3d_set()
+		speed_soft_cap = PLAYER_SPEED_SOFT_CAP_GROUND;
+		friction = PLAYER_FRICTION_GROUND;
+		acceleration = PLAYER_ACCELERATION_GROUND;
+		data->jumps_remaining = data->max_air_jumps;
+	}
+	else
+
+	{
+		speed_soft_cap = PLAYER_SPEED_SOFT_CAP_AIR;
+		friction = PLAYER_FRICTION_AIR;
+		acceleration = PLAYER_ACCELERATION_AIR;
+	}
+
+	// more granular movement while slowed down to dodge and stuff
+	if (gfc_input_command_down("dash"))
+	{
+		speed_soft_cap *= PLAYER_BULLET_TIME_SPEED_SCALE;
+		acceleration *= PLAYER_BULLET_TIME_ACCELERATION_SCALE;
+	}
+	if (data->dashed_this_frame)
+	{
+		data->dashed_this_frame = 0;
+		if (!gfc_vector3d_is_zero(data->wish_direction))
+		{
+			gfc_vector3d_copy(data->dash_direction, data->wish_direction);
+		}
+		else
+		{
+			data->dash_direction = gfc_vector3d(0, 1, 0);
+			gfc_vector3d_rotate_about_z(&data->dash_direction, data->cameraRotation.x);
+		}
+		self->velocity.x = data->dash_direction.x * PLAYER_DASH_VELOCITY;
+		self->velocity.y = data->dash_direction.y * PLAYER_DASH_VELOCITY;
+
+		//then resent z velocity so we dont instantly crater
+		if (!self->grounded && self->velocity.z < 0)
+		{
+			self->velocity.z = 0;
+		}
+	}
+	//1. apply velocity dampening:
+	friction_multiplier = 1 - (friction * scaled_delta_time);
+	if (friction_multiplier < 0)
+	{
+		friction_multiplier = 0;
+	}
+
+	self->velocity.x *= friction_multiplier;
+	self->velocity.y *= friction_multiplier;
+
+	if (fabsf(self->velocity.x) < PLAYER_VELOCITY_EPSILON)
+	{
+		self->velocity.x = 0;
+	}
+	if (fabsf(self->velocity.y) < PLAYER_VELOCITY_EPSILON)
+	{
+		self->velocity.y = 0;
 	}
 	
-	//do movement
+	//2. apply acceleration for wish_direction
+	
+	if (!gfc_vector3d_is_zero(data->wish_direction))
+	{
+		current_wish_direction_speed = (data->wish_direction.x * self->velocity.x) + (data->wish_direction.y * self->velocity.y);
+		speed_difference = speed_soft_cap - current_wish_direction_speed;
+		if (speed_difference > 0)
+		{
+			acceleration_speed = acceleration * scaled_delta_time * speed_soft_cap;
+			if (acceleration_speed > speed_difference)
+			{
+				acceleration_speed = speed_difference;
+			}
+			self->velocity.x += data->wish_direction.x * acceleration_speed;
+			self->velocity.y += data->wish_direction.y * acceleration_speed;
+		}
+	}
+
+	//3. apply gravity
+	if (!self->grounded)
+	{
+		self->velocity.z -= PLAYER_GRAVITY * scaled_delta_time;
+	}
+
+	//3.5 jump
+	if (data->jumped_this_frame)
+	{
+		data->jumped_this_frame = 0;
+		if (self->grounded)
+		{
+			self->velocity.z = PLAYER_JUMP_VELOCITY;
+			self->grounded = 0;
+		}
+		else if (data->jumps_remaining > 0)
+		{
+			self->velocity.z = PLAYER_JUMP_VELOCITY;
+			self->grounded = 0;
+			data->jumps_remaining--;
+		}
+	}
+
+	//4. do movement
 	gfc_vector3d_scale(scaled_physics, self->velocity, scaled_delta_time);
 	gfc_vector3d_add(self->position, self->position, scaled_physics);
 
-	//snap the player to the level only if they're not moving upwards
-	if (self->velocity.z > 0)
+	//reset grounded, so we do collisions, then edge check only if we need to
+	self->grounded = 0;
+
+	//do any bounds checks with other entities
+	entity_collide_all(self);
+	
+	//snap the player to the level only if they're not moving upwards and if they're not already grounded (so we dont snap through entities)
+	if (self->velocity.z <= 0 && !self->grounded)
 	{
-		self->grounded = 0;
-	}
-	else
-	{
-		ground_snap_offset = self->bounds.z - 2; //bottom of bounding box minus 2 so slopes/steps work
 		gfc_vector3d_copy(edge.b, self->position);
+		ground_snap_offset = self->bounds.z - 2; //bottom of bounding box minus 2 so slopes/steps work
 		edge.b.z += ground_snap_offset;
-		ground_snap_offset = self->bounds.d;
-		gfc_vector3d_copy(edge.a, edge.b);
+
+		gfc_vector3d_copy(edge.a, self->position);
+		ground_snap_offset = self->bounds.d * 0.5;
 		edge.a.z += ground_snap_offset;
+
 		if (level_line_test(level_get_the(), edge, &floor))
 		{
-			self->position.z = floor.z + (-self->bounds.z); //shoudl come from stats in player config 
+			self->position.z = floor.z - self->bounds.z; //shoudl come from stats in player config 
 			self->velocity.z = 0;
 			self->grounded = 1;
 		}
@@ -189,9 +317,6 @@ int player_update(Entity* self)
 		}
 	}
 
-	//do any bounds checks with other entities
-	entity_collide_all(self);
-	
 	//then check against world bounds
 	bitmask = entity_level_bounds_enforce(self);
 	

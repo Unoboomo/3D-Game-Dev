@@ -11,5 +11,16 @@
       "team": "world",
       "scale": [ 10, 10, 10 ]
     },
+    {
+      "name": "Cube2",
+      "model": "models/primitives/unit_cube.model",
+      "bounds": {
+        "m": [ -0.5, -0.5, 0 ],
+        "s": [ 1, 1, 1 ]
+      },
+      "description": "unit cube",
+      "team": "world",
+      "scale": [ 300, 5, 80 ]
+    }
   ]
 }

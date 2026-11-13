@@ -3,7 +3,7 @@
 		"sky": "models/sky/sky.model",
 		"terrain": "models/ground/ground.model",
 		"bounds": {
-			"m": [ -200, -200, -100 ],
+			"m": [ -200, -200, -50 ],
 			"s":  [400, 400, 200],
 		}
 	}
