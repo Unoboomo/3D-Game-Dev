@@ -88,6 +88,7 @@ int main(int argc,char *argv[])
     gf2d_actor_init(1000);
     gfc_config_def_load("config/mouse.cfg");
     gfc_config_def_load("defs/items.def");
+    gfc_config_def_load("defs/entities.def");
     entity_system_init(1000);
     mouse_system_init();
     time_system_init();
@@ -100,7 +101,7 @@ int main(int argc,char *argv[])
     level = level_load_from_file("levels/test_level.level");
     player_new(gfc_vector3d(0, 0, 0));
     spawn_item_from_def("Steve", gfc_vector3d(195, 195, 1));
-
+    entity_spawn_from_def("Cube1", gfc_vector3d(180, -180, 0));
     game_state = game_play();
     // main game loop    
     while(!_done)

@@ -174,3 +174,19 @@ Uint8 utils_invert_bitmask(Uint8 bitmask)
 
     return inverted_bitmask;
 }
+
+void utils_scale_box(GFC_Vector3D scale, GFC_Box* box)
+{
+    if (!box)
+    {
+        return;
+    }
+    box->x *= scale.x;
+    box->y *= scale.y;
+    box->z *= scale.z;
+
+    box->w *= scale.x;
+    box->h *= scale.y;
+    box->d *= scale.z;
+    return;
+}

@@ -14,7 +14,7 @@
 typedef enum { //entities of the same type do not collide with each other
 	ETT_none = 0,
 	ETT_player = 1 << 0,
-	ETT_monster = 1 << 1,
+	ETT_enemy = 1 << 1,
 	ETT_item = 1 << 2,
 	ETT_world = 1 << 3,
 	ETT_MAX = 1 << 4,
@@ -49,7 +49,6 @@ typedef struct Entity_s
 	Uint8 grounded;								//is the entity on the floor?
 
 	GFC_Vector3D rotation;	//x - pitch (around sideways vector), y - roll (around forward vector), z - yaw (around up vector)
-
 	GFC_Vector3D scale;
 
 	GFC_Matrix4	mat;
@@ -169,6 +168,18 @@ Uint8 entity_check_team(Entity* self, EntityTeamType team);
 void entity_collide_all(Entity* self);
 
 /**
+* @brief spawns an entity from def
+* @param entityName: [in] the name of the entity in the def to spawn
+* @param position: [in] where to spawn the entity
+*/
+Entity* entity_spawn_from_def(const char* entityName, GFC_Vector3D position);
+
+
+
+
+
+
+/**
 * @brief updates the position of an entity from its velocity and ensures it is still in world bounds
 * @param *self a pointer to the entity to update the position of
 */
@@ -184,7 +195,7 @@ void entity_update_position(Entity* self);
  * NOTE: this is post-move bounds checking
  * WARNING: can return BOX_COLLISION_ERROR, check for it
  */
-void entity_collide_with_world_entity_physics_resolve(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+//void entity_collide_with_world_entity_physics_resolve(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 
 void entity_system_free_all_but_player();
 

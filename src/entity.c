@@ -1,5 +1,8 @@
 #include "simple_logger.h"
 
+#include "gfc_config_def.h"
+#include "gfc_config.h"
+
 #include "utils.h"
 #include "level.h"
 
@@ -80,7 +83,59 @@ Entity* entity_initialize(Uint32 entity_system_index)
 	return &entity_system.entity_list[entity_system_index];
 }
 
-void entity_load(const char* filename);
+Entity* entity_spawn_from_def(const char* entityName, GFC_Vector3D position)
+{
+	const char* str;
+	SJson* entityDef;
+	Entity* self;
+	if (!entityName)
+	{
+		slog("cannot spawn entity with no provided name");
+		return NULL;
+	}
+	entityDef = gfc_config_def_get_by_name("entities", entityName);
+	if (!entityDef)
+	{
+		slog("cannot load entity def with name %s", entityName);
+		return NULL;
+	}
+	self = entity_new();
+	if (!self)
+	{
+		slog("failed to create entity for %s", entityName);
+		return NULL;
+	}
+	str = sj_object_get_string(entityDef, "model");
+	if (str)
+	{
+		self->model = model_load(str);
+		if (!self->model)
+		{
+			slog("failed to load model %s for entity %s", str, entityName);
+			entity_free(self);
+			return NULL;
+		}
+	}
+	str = sj_object_get_string(entityDef, "name");
+	if (str) {
+		gfc_line_cpy(self->name, str);
+	}
+
+	self->bounds = gfc_box_from_config(sj_object_get_value(entityDef, "bounds"));
+	if (!sj_object_get_vector3d(entityDef, "scale", &(self->scale)))
+	{
+		self->scale = gfc_vector3d(1, 1, 1);
+	}
+
+	utils_scale_box(self->scale, &(self->bounds));
+	gfc_vector3d_to_slog(self->scale);
+	str = sj_object_get_string(entityDef, "team");
+	self->team = entity_team_from_str(str);
+
+	self->position = position;
+	
+	return self;
+}
 
 void entity_free(Entity* self)
 {
@@ -249,7 +304,7 @@ void entity_system_queue_render_all()
 	}
 }
 
-Uint8 entity_collision_other(Entity* self, Entity* other, GFC_Vector3D *min_translation)
+Uint8 entity_collision_other(Entity* self, Entity* other, GFC_Vector3D* min_translation)
 {
 	//	BOX_COLLISION_NONE = 0,
 	//	BOX_COLLISION_POS_X = 1 << 0,
@@ -340,6 +395,31 @@ Uint8 entity_check_team(Entity* self, EntityTeamType team) {
 		return ETT_none;
 	}
 	return self->team & team;
+}
+
+EntityTeamType entity_team_from_str(const char* str)
+{
+	if (!str)
+	{
+		return ETT_none;
+	}
+	if (strcmp(str, "player") == 0)
+	{
+		return ETT_player;
+	}
+	if (strcmp(str, "enemy") == 0)
+	{
+		return ETT_enemy;
+	}
+	if (strcmp(str, "item") == 0)
+	{
+		return ETT_item;
+	}
+	if (strcmp(str, "world") == 0)
+	{
+		return ETT_world;
+	}
+	return ETT_none;
 }
 
 void entity_collide_all(Entity* self)

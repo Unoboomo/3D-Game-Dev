@@ -42,4 +42,12 @@ Uint8 utils_box_overlap(GFC_Box a, GFC_Box b, GFC_Vector3D *min_translation);
  */
 Uint8 utils_invert_bitmask(Uint8 bitmask);
 
+/**
+ * @brief scale a gfc box in all 3 dimension
+ * @param scale: [in] a non-negative vector containing the amounts to scale by
+ * @param box: [out] a pointer to the box to be scaled
+ */
+void utils_scale_box(GFC_Vector3D scale, GFC_Box* box);
+
+
 #endif 
