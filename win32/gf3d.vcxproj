@@ -252,6 +252,7 @@
     <None Include="..\config\setup.cfg" />
     <None Include="..\config\sky_pipeline.cfg" />
     <None Include="..\config\wireframe_pipeline.cfg" />
+    <None Include="..\defs\entities.def" />
     <None Include="..\defs\items.def" />
     <None Include="..\gfc\src\Makefile" />
     <None Include="..\levels\test_level.level" />
@@ -271,6 +272,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="..\models\primitives\flatwhite.xcf">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\models\primitives\unit_cube.model">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </None>
     <None Include="..\models\sky\sky.blend">
@@ -319,9 +323,6 @@
     <Object Include="..\models\ground\ground.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
-    <Object Include="..\models\primitives\cube.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </Object>
     <Object Include="..\models\primitives\icube.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
@@ -332,6 +333,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
     <Object Include="..\models\primitives\sphere.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\models\primitives\unit_cube.obj">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </Object>
     <Object Include="..\models\sky\sky.obj">

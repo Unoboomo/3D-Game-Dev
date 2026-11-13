@@ -5,9 +5,18 @@
       "model": "models/steve/steve.model",
       "bounds": {
         "m": [ -2, -1, -0 ],
-        "s": [ 4, 2, 8 ],
-        "description": "steve",
-      }
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "steve"
+    },
+    {
+      "name": "Aguman",
+      "model": "models/dino/dino.model",
+      "bounds": {
+        "m": [ -7.16433, -4.18962, -6.57308 ],
+        "s": [ 14.3287, 9.0455, 10.4108 ]
+      },
+      "description": "Aguman",
     },
   ]
 }

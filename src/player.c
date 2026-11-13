@@ -5,6 +5,7 @@
 #include "mouse.h"
 #include "level.h"
 #include "time.h"
+#include "utils.h"
 #include "player.h"
 
 int player_think(Entity* self);
@@ -35,14 +36,16 @@ Entity* player_new(GFC_Vector3D position) {
 		return NULL;
 	}
 
-	self->model = model_load("models/dino/dino.model");
+	self->model = model_load("models/steve/steve.model");
 	self->position = position;
 	self->think = player_think;
 	self->update = player_update;
 	self->free = player_free;
 	self->team = ETT_player;
 
-	self->bounds = gfc_box(-7.16433, -4.18962, -6.57308, 14.3287, 9.0455, 10.4108);
+	self->bounds = gfc_box(-2, -2, -0, 4, 4, 8);
+	self->scale = gfc_vector3d(2, 2, 2);
+	utils_scale_box(self->scale, &(self->bounds));
 
 	data = gfc_allocate_array(sizeof(PlayerEntityData), 1);
 	if (data)
@@ -50,6 +53,7 @@ Entity* player_new(GFC_Vector3D position) {
 		data->cameraFollowDistance = 50;
 		data->cameraRotation.x = 0;
 		data->cameraRotation.y = GFC_PI/6;
+		data->cameraFocusOffset.z = self->bounds.d * 0.6;
 
 	}
 	gfc_line_cpy(self->name, "Player");
@@ -176,7 +180,7 @@ int player_update(Entity* self)
 		edge.a.z += ground_snap_offset;
 		if (level_line_test(level_get_the(), edge, &floor))
 		{
-			self->position.z = floor.z + (-self->bounds.z); //shoudl come from stats in player config file
+			self->position.z = floor.z + (-self->bounds.z); //shoudl come from stats in player config 
 			self->velocity.z = 0;
 			self->grounded = 1;
 		}
@@ -202,7 +206,8 @@ void player_sync_camera(Entity* self)
 {
 	PlayerEntityData* data;
 	GFC_Matrix4* view;
-	GFC_Vector3D camera_offset = { 0, -1, 0 };
+	GFC_Vector3D camera_position_offset = { 0, -1.5,0 };
+	GFC_Vector3D camera_focus_offset = { 0 };
 	
 	if (!self || !self->data)
 	{
@@ -212,17 +217,18 @@ void player_sync_camera(Entity* self)
 
 	view = gf3d_vgraphics_get_view_matrix();
 
-	gfc_vector3d_scale(camera_offset, camera_offset, data->cameraFollowDistance);
-	gfc_vector3d_rotate_about_x(&camera_offset, data->cameraRotation.y);
+	gfc_vector3d_scale(camera_position_offset, camera_position_offset, data->cameraFollowDistance);
+	gfc_vector3d_rotate_about_x(&camera_position_offset, data->cameraRotation.y);
 
-	gfc_vector3d_rotate_about_z(&camera_offset, data->cameraRotation.x);
-	gfc_vector3d_add(camera_offset, camera_offset, self->position);
+	gfc_vector3d_rotate_about_z(&camera_position_offset, data->cameraRotation.x);
+	gfc_vector3d_add(camera_position_offset, camera_position_offset, self->position);
 
+	gfc_vector3d_add(camera_focus_offset, self->position, data->cameraFocusOffset);
 	//setup view matrix for new position
 	gfc_matrix4_view(
 		*view,
-		camera_offset,
-		self->position,
+		camera_position_offset,
+		camera_focus_offset,
 		gfc_vector3d(0, 0, 1)
 	);
 }

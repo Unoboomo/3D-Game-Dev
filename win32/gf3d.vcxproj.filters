@@ -661,6 +661,12 @@
     <None Include="..\config\mouse.cfg">
       <Filter>config</Filter>
     </None>
+    <None Include="..\defs\entities.def">
+      <Filter>defs</Filter>
+    </None>
+    <None Include="..\models\primitives\unit_cube.model">
+      <Filter>models\primitives</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\gfc\src\physfs_version.rc">
@@ -683,9 +689,6 @@
     <Object Include="..\models\testworld.obj">
       <Filter>models</Filter>
     </Object>
-    <Object Include="..\models\primitives\cube.obj">
-      <Filter>models\primitives</Filter>
-    </Object>
     <Object Include="..\models\primitives\icube.obj">
       <Filter>models\primitives</Filter>
     </Object>
@@ -700,6 +703,9 @@
     </Object>
     <Object Include="..\models\steve\steve.obj">
       <Filter>models\steve</Filter>
+    </Object>
+    <Object Include="..\models\primitives\unit_cube.obj">
+      <Filter>models\primitives</Filter>
     </Object>
   </ItemGroup>
   <ItemGroup>

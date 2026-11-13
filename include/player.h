@@ -7,6 +7,7 @@ typedef struct PlayerEntityData_s
 {
 	float			cameraFollowDistance;
 	GFC_Vector3D	cameraRotation;
+	GFC_Vector3D	cameraFocusOffset;
 
 	//other player specific data
 
