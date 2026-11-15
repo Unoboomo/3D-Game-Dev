@@ -16,9 +16,10 @@ typedef enum { //entities of the same type do not collide with each other
 	ETT_player = 1 << 0,
 	ETT_enemy = 1 << 1,
 	ETT_item = 1 << 2,
-	ETT_world = 1 << 3,
-	ETT_MAX = 1 << 4,
-}EntityTeamType;
+	ETT_world_collider = 1 << 3,
+	ETT_world_trigger = 1 << 4,
+	ETT_MAX = 1 << 5
+} EntityTeamType;
 
 //typedef enum {
 //	ECL_none = 0,

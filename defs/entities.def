@@ -8,7 +8,7 @@
         "s": [ 1, 1, 1 ]
       },
       "description": "unit cube",
-      "team": "world",
+      "team": "world_collider",
       "scale": [ 10, 10, 10 ]
     },
     {
@@ -19,19 +19,66 @@
         "s": [ 1, 1, 1 ]
       },
       "description": "unit cube",
-      "team": "world",
+      "team": "world_collider",
       "scale": [ 300, 5, 80 ]
     },
     {
-      "name": "Steve",
+      "name": "Dash Refresh",
       "model": "models/steve/steve.model",
       "bounds": {
         "m": [ -2, -1, -0 ],
         "s": [ 4, 2, 8 ]
       },
-      "description": "steve",
+      "description": "dash refresh",
       "team": "item",
-      "color": [0, 0, 0, 255],
+      "color": [ 0, 255, 0, 255 ]
+    },
+    {
+      "name": "Jump Refresh",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "jump refresh",
+      "team": "item",
+      "color": [ 255, 0, 0, 255 ]
+    },
+    {
+      "name": "Bounce Pad",
+      "model": "models/primitives/unit_cube.model",
+      "bounds": {
+        "m": [ -0.5, -0.5, 0 ],
+        "s": [ 1, 1, 1 ]
+      },
+      "description": "bounce that boi",
+      "team": "world_trigger",
+      "color": [ 0, 0, 100, 255 ],
+      "scale": [ 10, 10, 1 ]
+    },
+    {
+      "name": "Reduced Gravity Field",
+      "model": "models/primitives/unit_cube.model",
+      "bounds": {
+        "m": [ -0.5, -0.5, 0 ],
+        "s": [ 1, 1, 200 ]
+      },
+      "description": "let that boi soar",
+      "team": "world_trigger",
+      "color": [ 100, 0, 100, 255 ],
+      "scale": [ 50, 50, 1 ]
+    },
+    {
+      "name": "Breakable Wall",
+      "model": "models/primitives/unit_cube.model",
+      "bounds": {
+        "m": [ -0.5, -0.5, 0 ],
+        "s": [ 1, 1, 1 ]
+      },
+      "description": "break that boi",
+      "team": "world_collider",
+      "color": [ 100, 100, 100, 255 ],
+      "scale": [ 20, 20, 20 ]
     }
   ]
 }

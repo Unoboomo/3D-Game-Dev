@@ -351,6 +351,9 @@
     <ClCompile Include="..\src\time.c">
       <Filter>Source Files\game</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\world.c">
+      <Filter>Source Files\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\gf2d_actor.h">
@@ -549,6 +552,9 @@
       <Filter>Header Files\game</Filter>
     </ClInclude>
     <ClInclude Include="..\include\time.h">
+      <Filter>Header Files\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\world.h">
       <Filter>Header Files\game</Filter>
     </ClInclude>
   </ItemGroup>

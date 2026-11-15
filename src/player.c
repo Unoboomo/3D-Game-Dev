@@ -68,6 +68,8 @@ Entity* player_new(GFC_Vector3D position) {
 		data->dashes_remaining = PLAYER_MAX_AIR_DASHES;
 		data->dashed_this_frame = 0;
 		data->dash_exhausted = 0;
+
+		data->reduced_gravity = 0;
 	}
 	gfc_line_cpy(self->name, "Player");
 	self->data = data;
@@ -366,7 +368,15 @@ int player_update(Entity* self)
 	//3. apply gravity
 	if (!self->grounded)
 	{
-		self->velocity.z -= PLAYER_GRAVITY * scaled_delta_time;
+		if (data->reduced_gravity)
+		{
+			self->velocity.z -= PLAYER_REDUCED_GRAVITY * scaled_delta_time;
+		}
+		else
+		{
+			self->velocity.z -= PLAYER_GRAVITY * scaled_delta_time;
+		}
+		
 	}
 
 	//3.5 jump
@@ -392,6 +402,7 @@ int player_update(Entity* self)
 
 	//reset grounded, so we do collisions, then edge check only if we need to
 	self->grounded = 0;
+	data->reduced_gravity = 0;
 
 	//do any bounds checks with other entities
 	entity_collide_all(self);

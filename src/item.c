@@ -6,6 +6,8 @@
 #include "item.h"
 
 void item_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_jump_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_dash_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 
 Entity* spawn_item_from_def(const char* itemName, GFC_Vector3D position)
 {
@@ -61,6 +63,14 @@ void* item_get_touch_function_by_name(GFC_TextLine name)
 	{
 		return item_touch;
 	}
+	if (gfc_strlcmp(name, "Jump Refresh") == 0)
+	{
+		return item_jump_refresh_touch;
+	}
+	if (gfc_strlcmp(name, "Dash Refresh") == 0)
+	{
+		return item_dash_refresh_touch;
+	}
 	else
 	{
 		slog("touch function for item %s not found", name);
@@ -79,6 +89,52 @@ void item_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector
 	{
 		slog("give player item %s", self->name);
 		entity_free(self);
-		return 1;
+		return;
+	}
+}
+
+void item_jump_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->jumps_remaining++;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_dash_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->dashes_remaining++;
+		entity_free(self);
+		return;
 	}
 }

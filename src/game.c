@@ -100,10 +100,18 @@ int main(int argc,char *argv[])
     gf2d_mouse_load("actors/mouse.actor");
     level = level_load_from_file("levels/test_level.level");
     player_new(gfc_vector3d(0, 0, 50));
-    entity_spawn_from_def("Steve", gfc_vector3d(195, 195, 1));
+
     entity_spawn_from_def("Cube1", gfc_vector3d(180, -180, 0));
     entity_spawn_from_def("Cube1", gfc_vector3d(180, -170, 10));
     entity_spawn_from_def("Wall1", gfc_vector3d(0, -190, 0));
+
+    //world interactibles
+    entity_spawn_from_def("Jump Refresh", gfc_vector3d(190, 190, 20));
+    entity_spawn_from_def("Dash Refresh", gfc_vector3d(170, 190, 20));
+    entity_spawn_from_def("Bounce Pad", gfc_vector3d(180, -150, 0));
+    entity_spawn_from_def("Reduced Gravity Field", gfc_vector3d(-175, 175, 0));
+    entity_spawn_from_def("Breakable Wall", gfc_vector3d(-150, 150, 0));
+
     game_state = game_play();
     // main game loop    
     while(!_done)

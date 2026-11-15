@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "level.h"
 #include "item.h"
+#include "world.h"
 
 #include "entity.h"
 
@@ -26,6 +27,8 @@ Entity* entity_initialize(Uint32 entity_system_index);
 void entity_update(Entity* self);
 
 void entity_think(Entity* self);
+
+EntityTeamType entity_team_from_str(const char* str);
 
 void entity_system_init(Uint32 max_entities)
 {
@@ -137,6 +140,10 @@ Entity* entity_spawn_from_def(const char* entityName, GFC_Vector3D position)
 	if (self->team == ETT_item)
 	{
 		self->touch = item_get_touch_function_by_name(self->name);
+	}
+	if (self->team == ETT_world_collider || self->team == ETT_world_trigger)
+	{
+		self->touch = world_get_touch_function_by_name(self->name);
 	}
 
 	color_mod = sj_object_get_color(entityDef, "color");
@@ -425,9 +432,13 @@ EntityTeamType entity_team_from_str(const char* str)
 	{
 		return ETT_item;
 	}
-	if (strcmp(str, "world") == 0)
+	if (strcmp(str, "world_collider") == 0)
 	{
-		return ETT_world;
+		return ETT_world_collider;
+	}
+	if (strcmp(str, "world_trigger") == 0)
+	{
+		return ETT_world_trigger;
 	}
 	return ETT_none;
 }
@@ -466,9 +477,28 @@ void entity_collide_all(Entity* self)
 		bitmask = entity_collision_other(self, other, &min_translation);
 		if (bitmask && !(bitmask & BOX_COLLISION_ERROR)) //we had a collision;
 		{
+			if (self->touch)
+			{
+				self->touch(self, other, bitmask, min_translation);
+			}
+			if (!self->_inuse)
+			{
+				return;
+			}
+
+			if (other->_inuse && other->touch)
+			{
+				other_bitmask = utils_invert_bitmask(bitmask);
+				gfc_vector3d_negate(other_min_translation, min_translation);
+				other->touch(other, self, other_bitmask, other_min_translation);
+			}
+			if (!other->_inuse)
+			{
+				continue;
+			}
 
 			//its a world collision, treat it as such
-			if (entity_check_team(other, ETT_world))
+			if (entity_check_team(other, ETT_world_collider))
 			{
 				//first, move self out of other entity
 				gfc_vector3d_add(self->position, self->position, min_translation);
@@ -514,21 +544,6 @@ void entity_collide_all(Entity* self)
 					self->acceleration.z = 0;
 					self->grounded = 1;
 				}
-			}
-			if (self->touch)
-			{
-				self->touch(self, other, bitmask, min_translation);
-			}
-			if (!self->_inuse)
-			{
-				return;
-			}
-
-			if (other->_inuse && other->touch)
-			{
-				other_bitmask = utils_invert_bitmask(bitmask);
-				gfc_vector3d_negate(other_min_translation, min_translation);
-				other->touch(other, self, other_bitmask, other_min_translation);
 			}
 		}
 		else if (bitmask & BOX_COLLISION_ERROR)

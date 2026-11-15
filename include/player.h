@@ -33,6 +33,8 @@ typedef struct PlayerEntityData_s
 	GFC_Vector3D			dash_direction;
 	int						dash_exhausted;
 
+	int						reduced_gravity;
+
 	float					stamina;
 	float					stamina_recovery_rate;
 
@@ -79,6 +81,7 @@ typedef struct PlayerEntityData_s
 
 #define PLAYER_VELOCITY_EPSILON					1.0f
 #define PLAYER_GRAVITY							500.0f
+#define PLAYER_REDUCED_GRAVITY					(PLAYER_GRAVITY * 0.3)
 
 #define PLAYER_STANDING_JUMP_VELOCITY			150.0f
 #define PLAYER_SLIDING_JUMP_VELOCITY			PLAYER_STANDING_JUMP_VELOCITY
@@ -107,5 +110,4 @@ void player_get_movement_state_as_GFC_Textline(GFC_TextLine text)
 * @brief get the player singleton
 */
 Entity* player_get_the();
-
 #endif
