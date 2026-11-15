@@ -3,32 +3,37 @@
 
 #include "entity.h"
 
+typedef enum
+{
+	PMS_Normal,
+	PMS_Dashing,
+	PMS_Sliding,
+	PMS_Crouching,
+	PMS_Error,
+}PlayerMovementState;
 
-/**
- * first: dampen in velocity by current friction: v_damp = v - v * friction * dtime, if v_damp and v are diff signs, v_damp = 0
- * then: acceleration
- */
 typedef struct PlayerEntityData_s
 {
-	float			cameraFollowDistance;
-	GFC_Vector3D	cameraRotation;
-	GFC_Vector3D	cameraFocusOffset;
+	float					cameraFollowDistance;
+	GFC_Vector3D			cameraRotation;
+	GFC_Vector3D			cameraFocusOffset;
 
-	GFC_Vector3D	wish_direction;
+	GFC_Vector3D			wish_direction;
 
+	PlayerMovementState		movement_state;
 
-	int				jumps_remaining;
-	int				max_air_jumps;
-	int				jumped_this_frame;
+	int						jumps_remaining;
+	int						max_air_jumps;
+	int						jumped_this_frame;
+	float					jump_velocity;
 
-	int				dashed_this_frame;
-	GFC_Vector3D	dash_direction;
+	int						dashed_this_frame;
+	GFC_Vector3D			dash_direction;
 
-	float			stamina;
-	float			stamina_recovery_rate;
+	float					stamina;
+	float					stamina_recovery_rate;
 
-
-	Uint8			wall_run_side;
+	Uint8					wall_run_side;
 	//other player specific data
 
 	//Uint8	jump_buffer;			//gives the player a #frame jump buffer so they are not frame perfect
@@ -45,25 +50,37 @@ typedef struct PlayerEntityData_s
 	//int		lives_count;
 }PlayerEntityData;
 
-#define PLAYER_BULLET_TIME_SPEED_SCALE			1.5f
-#define PLAYER_BULLET_TIME_ACCELERATION_SCALE	2.0f
+#define PLAYER_BULLET_TIME_SPEED_SCALE			2.0f
+#define PLAYER_BULLET_TIME_ACCELERATION_SCALE	4.0f
+#define PLAYER_BULLET_TIME_FRICTION_SCALE		4.0f
 
 #define BULLET_TIME_TIME_SCALE					0.2f
 #define REAL_TIME_TIME_SCALE					1.0f
 
-#define PLAYER_SPEED_SOFT_CAP_GROUND			200.0f
-#define PLAYER_SPEED_SOFT_CAP_AIR				150.0f
+#define PLAYER_GROUND_SPEED_SOFT_CAP			150.0f
+#define PLAYER_AIR_SPEED_SOFT_CAP				100.0f
 
-#define PLAYER_ACCELERATION_GROUND				8.0f
-#define PLAYER_ACCELERATION_AIR					4.0f
+#define PLAYER_GROUND_ACCELERATION				8.0f
+#define PLAYER_AIR_ACCELERATION					4.0f
 
-#define PLAYER_FRICTION_GROUND					8.0f
-#define PLAYER_FRICTION_AIR						0.5f
+#define PLAYER_GROUND_FRICTION					8.0f
+#define PLAYER_AIR_FRICTION						0.5f
+
+#define PLAYER_SLIDING_SPEED_THRESHOLD			50.0f
+#define PLAYER_SLIDING_FRICTION					1.0f
+#define PLAYER_SLIDING_ACCELERATION				1.0f
+
+#define PLAYER_CROUCH_SPEED_SOFT_CAP			PLAYER_SLIDING_SPEED_THRESHOLD
+#define PLAYER_CROUCH_FRICTION					PLAYER_GROUND_FRICTION
+
 
 #define PLAYER_VELOCITY_EPSILON					1.0f
 #define PLAYER_GRAVITY							500.0f
 
-#define PLAYER_JUMP_VELOCITY					150.0f
+#define PLAYER_STANDING_JUMP_VELOCITY			150.0f
+#define PLAYER_SLIDING_JUMP_VELOCITY			PLAYER_STANDING_JUMP_VELOCITY
+#define PLAYER_CROUCHING_JUMP_VELOCITY			(PLAYER_STANDING_JUMP_VELOCITY * 0.7)
+
 #define PLAYER_MAX_AIR_JUMPS					1
 
 #define PLAYER_DASH_VELOCITY					300.0f
@@ -74,6 +91,13 @@ typedef struct PlayerEntityData_s
 * @return NULL on error, or a pointer to the spawned player entity
 */
 Entity* player_new(GFC_Vector3D position);
+
+/**
+ * @brief gets the player state as a gfc_textline so it can be sloged
+ * @param text: [out] the gfc_textline the state is copied to
+ */
+void player_get_movement_state_as_GFC_Textline(GFC_TextLine text)
+;
 
 /**
 * @brief get the player singleton

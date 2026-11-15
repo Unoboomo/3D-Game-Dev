@@ -99,10 +99,11 @@ int main(int argc,char *argv[])
     //bg = gf2d_sprite_load_image("images/bg_flat.png");
     gf2d_mouse_load("actors/mouse.actor");
     level = level_load_from_file("levels/test_level.level");
-    player_new(gfc_vector3d(0, 0, 40));
+    player_new(gfc_vector3d(0, 0, 50));
     spawn_item_from_def("Steve", gfc_vector3d(195, 195, 1));
     entity_spawn_from_def("Cube1", gfc_vector3d(180, -180, 0));
-    entity_spawn_from_def("Cube2", gfc_vector3d(0, -190, 0));
+    entity_spawn_from_def("Cube1", gfc_vector3d(180, -170, 10));
+    entity_spawn_from_def("Wall1", gfc_vector3d(0, -190, 0));
     game_state = game_play();
     // main game loop    
     while(!_done)

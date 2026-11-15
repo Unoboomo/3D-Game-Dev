@@ -14,6 +14,8 @@ void player_free(Entity* self);
 
 void player_sync_camera(Entity* self);
 
+void player_change_movement_state(PlayerMovementState state);
+
 static Entity* the_player = NULL;
 
 Entity* player_get_the()
@@ -55,9 +57,12 @@ Entity* player_new(GFC_Vector3D position) {
 		data->cameraRotation.y = GFC_PI/6;
 		data->cameraFocusOffset.z = self->bounds.d * 0.6;
 
+		data->movement_state = PMS_Normal;
+
 		data->max_air_jumps = PLAYER_MAX_AIR_JUMPS;
 		data->jumps_remaining = PLAYER_MAX_AIR_JUMPS;
 		data->jumped_this_frame = 0;
+		data->jump_velocity = PLAYER_STANDING_JUMP_VELOCITY;
 	}
 	gfc_line_cpy(self->name, "Player");
 	self->data = data;
@@ -90,7 +95,7 @@ int player_think(Entity* self)
 {
 	GFC_Vector3D move = { 0 };
 	PlayerEntityData* data;
-
+	float current_speed;
 	if (!self || !self->data)
 	{
 		return 1;
@@ -112,6 +117,32 @@ int player_think(Entity* self)
 		data->dashed_this_frame = 1;
 	}
 	//end of wrap
+
+	if (gfc_input_command_down("crouch"))
+	{
+		if (data->movement_state == PMS_Normal && self->grounded)
+		{
+			//crouching/sliding scale change:
+			current_speed = (self->velocity.x * self->velocity.x) + (self->velocity.y * self->velocity.y);
+			if (current_speed > (PLAYER_SLIDING_SPEED_THRESHOLD * PLAYER_SLIDING_SPEED_THRESHOLD))
+			{
+
+				player_change_movement_state(PMS_Sliding);
+				//give speed boost here or in the function
+			}
+			else
+			{ 
+				player_change_movement_state(PMS_Crouching);
+			}
+		}
+	}
+	else //(!gfc_input_command_down("crouch"))
+	{
+		if (data->movement_state == PMS_Sliding || data->movement_state == PMS_Crouching)
+		{ 
+			player_change_movement_state(PMS_Normal);
+		}
+	}
 
 	if (gfc_input_command_pressed("jump"))
 	{
@@ -164,6 +195,8 @@ int player_update(Entity* self)
 	GFC_Vector3D floor;
 	float scaled_delta_time;
 	GFC_Vector3D scaled_physics;
+	GFC_TextLine debug;
+	float current_speed;
 
 	float friction;
 	float friction_multiplier;
@@ -185,17 +218,35 @@ int player_update(Entity* self)
 
 	if (self->grounded)
 	{
-		speed_soft_cap = PLAYER_SPEED_SOFT_CAP_GROUND;
-		friction = PLAYER_FRICTION_GROUND;
-		acceleration = PLAYER_ACCELERATION_GROUND;
+		if (data->movement_state == PMS_Sliding)
+		{
+			acceleration = PLAYER_SLIDING_ACCELERATION;
+			friction = PLAYER_SLIDING_FRICTION;
+			speed_soft_cap = PLAYER_GROUND_SPEED_SOFT_CAP;
+		}
+		else
+		{
+			if (data->movement_state == PMS_Crouching)
+			{
+				acceleration = PLAYER_GROUND_ACCELERATION;
+				friction = PLAYER_CROUCH_FRICTION;
+				speed_soft_cap = PLAYER_CROUCH_SPEED_SOFT_CAP;
+			}
+			else
+			{
+				acceleration = PLAYER_GROUND_ACCELERATION;
+				friction = PLAYER_GROUND_FRICTION;
+				speed_soft_cap = PLAYER_GROUND_SPEED_SOFT_CAP;
+			}
+		}
+		
 		data->jumps_remaining = data->max_air_jumps;
 	}
-	else
-
+	else //(!self->grounded)
 	{
-		speed_soft_cap = PLAYER_SPEED_SOFT_CAP_AIR;
-		friction = PLAYER_FRICTION_AIR;
-		acceleration = PLAYER_ACCELERATION_AIR;
+		speed_soft_cap = PLAYER_AIR_SPEED_SOFT_CAP;
+		friction = PLAYER_AIR_FRICTION;
+		acceleration = PLAYER_AIR_ACCELERATION;
 	}
 
 	// more granular movement while slowed down to dodge and stuff
@@ -203,18 +254,22 @@ int player_update(Entity* self)
 	{
 		speed_soft_cap *= PLAYER_BULLET_TIME_SPEED_SCALE;
 		acceleration *= PLAYER_BULLET_TIME_ACCELERATION_SCALE;
+		friction *= PLAYER_BULLET_TIME_FRICTION_SCALE;
 	}
+
 	if (data->dashed_this_frame)
 	{
 		data->dashed_this_frame = 0;
-		if (!gfc_vector3d_is_zero(data->wish_direction))
-		{
-			gfc_vector3d_copy(data->dash_direction, data->wish_direction);
-		}
-		else
-		{
+
+		if (gfc_vector3d_is_zero(data->wish_direction) || !self->grounded)
+		{ //if we're not grounded or not holding a direction, dash forward
 			data->dash_direction = gfc_vector3d(0, 1, 0);
 			gfc_vector3d_rotate_about_z(&data->dash_direction, data->cameraRotation.x);
+		}
+		else //(self->grounded && !gfc_vector3d_is_zero(data->wish_direction))
+		{
+			gfc_vector3d_copy(data->dash_direction, data->wish_direction);
+			
 		}
 		self->velocity.x = data->dash_direction.x * PLAYER_DASH_VELOCITY;
 		self->velocity.y = data->dash_direction.y * PLAYER_DASH_VELOCITY;
@@ -225,8 +280,14 @@ int player_update(Entity* self)
 			self->velocity.z = 0;
 		}
 	}
+
+	player_get_movement_state_as_GFC_Textline(debug);
+	slog("player state: %s", debug);
+	slog_sync();
+
 	//1. apply velocity dampening:
 	friction_multiplier = 1 - (friction * scaled_delta_time);
+
 	if (friction_multiplier < 0)
 	{
 		friction_multiplier = 0;
@@ -245,22 +306,34 @@ int player_update(Entity* self)
 	}
 	
 	//2. apply acceleration for wish_direction
-	
-	if (!gfc_vector3d_is_zero(data->wish_direction))
+	if (gfc_vector3d_is_zero(data->wish_direction))
 	{
-		current_wish_direction_speed = (data->wish_direction.x * self->velocity.x) + (data->wish_direction.y * self->velocity.y);
-		speed_difference = speed_soft_cap - current_wish_direction_speed;
-		if (speed_difference > 0)
+		//if no wasd held, dont increase velocity
+	}
+	else 
+	{
+		//wasd is held
+		if (data->movement_state == PMS_Sliding && self->grounded)
 		{
-			acceleration_speed = acceleration * scaled_delta_time * speed_soft_cap;
-			if (acceleration_speed > speed_difference)
+			// when sliding and on the ground, wasd does nothing, you cant increase your velocity with them
+		}
+		else //(data->movement_state != PMS_Sliding || !self->grounded)
+		{
+			current_wish_direction_speed = (data->wish_direction.x * self->velocity.x) + (data->wish_direction.y * self->velocity.y);
+			speed_difference = speed_soft_cap - current_wish_direction_speed;
+			if (speed_difference > 0)
 			{
-				acceleration_speed = speed_difference;
+				acceleration_speed = acceleration * scaled_delta_time * speed_soft_cap;
+				if (acceleration_speed > speed_difference)
+				{
+					acceleration_speed = speed_difference;
+				}
+				self->velocity.x += data->wish_direction.x * acceleration_speed;
+				self->velocity.y += data->wish_direction.y * acceleration_speed;
 			}
-			self->velocity.x += data->wish_direction.x * acceleration_speed;
-			self->velocity.y += data->wish_direction.y * acceleration_speed;
 		}
 	}
+
 
 	//3. apply gravity
 	if (!self->grounded)
@@ -274,12 +347,12 @@ int player_update(Entity* self)
 		data->jumped_this_frame = 0;
 		if (self->grounded)
 		{
-			self->velocity.z = PLAYER_JUMP_VELOCITY;
+			self->velocity.z = data->jump_velocity;
 			self->grounded = 0;
 		}
 		else if (data->jumps_remaining > 0)
 		{
-			self->velocity.z = PLAYER_JUMP_VELOCITY;
+			self->velocity.z = data->jump_velocity;
 			self->grounded = 0;
 			data->jumps_remaining--;
 		}
@@ -303,7 +376,7 @@ int player_update(Entity* self)
 		edge.b.z += ground_snap_offset;
 
 		gfc_vector3d_copy(edge.a, self->position);
-		ground_snap_offset = self->bounds.d * 0.5;
+		ground_snap_offset = self->bounds.z + 8;
 		edge.a.z += ground_snap_offset;
 
 		if (level_line_test(level_get_the(), edge, &floor))
@@ -320,6 +393,22 @@ int player_update(Entity* self)
 	//then check against world bounds
 	bitmask = entity_level_bounds_enforce(self);
 	
+	current_speed = (self->velocity.x * self->velocity.x) + (self->velocity.y * self->velocity.y);
+	if (data->movement_state == PMS_Sliding)
+	{
+		if (self->grounded && current_speed < (PLAYER_SLIDING_SPEED_THRESHOLD * PLAYER_SLIDING_SPEED_THRESHOLD))
+		{
+			player_change_movement_state(PMS_Crouching);
+		}
+	}
+	else if (data->movement_state == PMS_Crouching)
+	{
+		if (self->grounded && current_speed > (PLAYER_SLIDING_SPEED_THRESHOLD * PLAYER_SLIDING_SPEED_THRESHOLD))
+		{
+			player_change_movement_state(PMS_Sliding);
+		}
+	}
+
 	//sync player rotation with the camera
 	self->rotation.z = data->cameraRotation.x + GFC_PI;
 
@@ -356,4 +445,98 @@ void player_sync_camera(Entity* self)
 		camera_focus_offset,
 		gfc_vector3d(0, 0, 1)
 	);
+}
+
+void player_change_movement_state(PlayerMovementState state)
+{
+	PlayerEntityData* data;
+	if (!the_player || !the_player->data)
+	{
+		slog("cannot change movement state of nonexistent player");
+		return;
+	}
+	data = (PlayerEntityData*)the_player->data;
+
+	if (state == PMS_Normal) //transitioning to
+	{
+		if (data->movement_state == PMS_Sliding || data->movement_state == PMS_Crouching) //transitioning from
+		{
+			the_player->scale.z *= 2;
+			the_player->bounds.d *= 2;
+			data->movement_state = PMS_Normal;
+			data->jump_velocity = PLAYER_STANDING_JUMP_VELOCITY;
+			return;
+		}
+	}
+	else if (state == PMS_Sliding) //transitioning to
+	{
+		if (data->movement_state == PMS_Normal) //transitioning from
+		{
+			the_player->scale.z *= 0.5;
+			the_player->bounds.d *= 0.5;
+			data->movement_state = PMS_Sliding;
+			data->jump_velocity = PLAYER_SLIDING_JUMP_VELOCITY;
+			return;
+		}
+		else if (data->movement_state == PMS_Crouching) //transitioning from
+		{
+			data->movement_state = PMS_Sliding;
+			data->jump_velocity = PLAYER_SLIDING_JUMP_VELOCITY;
+			return;
+		}
+	}
+	else if (state == PMS_Crouching) //transitioning to
+	{
+		if (data->movement_state == PMS_Normal) //transitioning from
+		{
+			the_player->scale.z *= 0.5;
+			the_player->bounds.d *= 0.5;
+			data->movement_state = PMS_Crouching;
+			data->jump_velocity = PLAYER_CROUCHING_JUMP_VELOCITY;
+			return;
+		}
+		else if (data->movement_state == PMS_Sliding) //transitioning from
+		{
+			data->movement_state = PMS_Crouching;
+			data->jump_velocity = PLAYER_CROUCHING_JUMP_VELOCITY;
+			return;
+		}
+	}
+}
+
+void player_get_movement_state_as_GFC_Textline(GFC_TextLine text)
+{
+	PlayerEntityData* data;
+	if (!the_player)
+	{
+		slog("cannot get movement state for nonexistent player");
+		return;
+	}
+	if (!the_player->data)
+	{
+		slog("the player has no data, cannot get movement state");
+	}
+
+	data = (PlayerEntityData*)the_player->data;
+
+	if (data->movement_state == PMS_Normal)
+	{
+		gfc_line_cpy(text, "Normal");
+	}
+	else if (data->movement_state == PMS_Dashing)
+	{
+		gfc_line_cpy(text, "Dashing");
+	}
+	else if (data->movement_state == PMS_Sliding)
+	{
+		gfc_line_cpy(text, "Sliding");
+	}
+	else if (data->movement_state == PMS_Crouching)
+	{
+		gfc_line_cpy(text, "Crouching");
+	}
+	else
+	{
+		gfc_line_cpy(text, "Error");
+	}
 }
