@@ -63,6 +63,11 @@ Entity* player_new(GFC_Vector3D position) {
 		data->jumps_remaining = PLAYER_MAX_AIR_JUMPS;
 		data->jumped_this_frame = 0;
 		data->jump_velocity = PLAYER_STANDING_JUMP_VELOCITY;
+
+		data->max_air_dashes = PLAYER_MAX_AIR_DASHES;
+		data->dashes_remaining = PLAYER_MAX_AIR_DASHES;
+		data->dashed_this_frame = 0;
+		data->dash_exhausted = 0;
 	}
 	gfc_line_cpy(self->name, "Player");
 	self->data = data;
@@ -103,13 +108,26 @@ int player_think(Entity* self)
 	data = (PlayerEntityData*)self->data;
 	
 	//will eventually wrap this in if !grounded
-	if (gfc_input_command_down("dash"))
+
+	if (gfc_input_command_down("dash") && (self->grounded || data->dashes_remaining > 0)) // && stamina > min required to dash
 	{
-		time_set_time_scale(BULLET_TIME_TIME_SCALE);
+		if (!data->dash_exhausted)
+		{
+			time_set_time_scale(BULLET_TIME_TIME_SCALE);
+		}
+		else
+		{
+			data->dash_exhausted = 1;
+			time_set_time_scale(REAL_TIME_TIME_SCALE);
+		}
 	}
 	else
 	{
 		time_set_time_scale(REAL_TIME_TIME_SCALE);
+		if (self->grounded)
+		{
+			data->dash_exhausted = 0;
+		}
 	}
 
 	if (gfc_input_command_released("dash"))
@@ -190,7 +208,7 @@ int player_update(Entity* self)
 	PlayerEntityData* data;
 	Uint8 bitmask;
 	GFC_Edge3D edge = { 0 };
-	GFC_Vector3D offset;
+	//GFC_Vector3D offset;
 	float ground_snap_offset;
 	GFC_Vector3D floor;
 	float scaled_delta_time;
@@ -241,6 +259,7 @@ int player_update(Entity* self)
 		}
 		
 		data->jumps_remaining = data->max_air_jumps;
+		data->dashes_remaining = data->max_air_dashes;
 	}
 	else //(!self->grounded)
 	{
@@ -260,25 +279,34 @@ int player_update(Entity* self)
 	if (data->dashed_this_frame)
 	{
 		data->dashed_this_frame = 0;
-
-		if (gfc_vector3d_is_zero(data->wish_direction) || !self->grounded)
-		{ //if we're not grounded or not holding a direction, dash forward
-			data->dash_direction = gfc_vector3d(0, 1, 0);
-			gfc_vector3d_rotate_about_z(&data->dash_direction, data->cameraRotation.x);
-		}
-		else //(self->grounded && !gfc_vector3d_is_zero(data->wish_direction))
+		if (self->grounded || data->dashes_remaining > 0)
 		{
-			gfc_vector3d_copy(data->dash_direction, data->wish_direction);
-			
-		}
-		self->velocity.x = data->dash_direction.x * PLAYER_DASH_VELOCITY;
-		self->velocity.y = data->dash_direction.y * PLAYER_DASH_VELOCITY;
+			if (!self->grounded)
+			{
+				data->dashes_remaining--;
+			}
 
-		//then resent z velocity so we dont instantly crater
-		if (!self->grounded && self->velocity.z < 0)
-		{
-			self->velocity.z = 0;
+			//dash logic
+			if (gfc_vector3d_is_zero(data->wish_direction) || !self->grounded)
+			{ //if we're not grounded or not holding a direction, dash forward
+				data->dash_direction = gfc_vector3d(0, 1, 0);
+				gfc_vector3d_rotate_about_z(&data->dash_direction, data->cameraRotation.x);
+			}
+			else //(self->grounded && !gfc_vector3d_is_zero(data->wish_direction))
+			{
+				gfc_vector3d_copy(data->dash_direction, data->wish_direction);
+
+			}
+			self->velocity.x = data->dash_direction.x * PLAYER_DASH_VELOCITY;
+			self->velocity.y = data->dash_direction.y * PLAYER_DASH_VELOCITY;
+
+			//then resent z velocity so we dont instantly crater
+			if (!self->grounded && self->velocity.z < 0)
+			{
+				self->velocity.z = 0;
+			}
 		}
+		
 	}
 
 	player_get_movement_state_as_GFC_Textline(debug);
@@ -345,16 +373,16 @@ int player_update(Entity* self)
 	if (data->jumped_this_frame)
 	{
 		data->jumped_this_frame = 0;
-		if (self->grounded)
+		if (self->grounded || data->jumps_remaining > 0)
 		{
+			if (!self->grounded)
+			{
+				data->jumps_remaining--;
+			}
+
+			//jump logic
 			self->velocity.z = data->jump_velocity;
 			self->grounded = 0;
-		}
-		else if (data->jumps_remaining > 0)
-		{
-			self->velocity.z = data->jump_velocity;
-			self->grounded = 0;
-			data->jumps_remaining--;
 		}
 	}
 

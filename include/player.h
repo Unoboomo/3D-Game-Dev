@@ -22,13 +22,16 @@ typedef struct PlayerEntityData_s
 
 	PlayerMovementState		movement_state;
 
-	int						jumps_remaining;
 	int						max_air_jumps;
+	int						jumps_remaining;
 	int						jumped_this_frame;
 	float					jump_velocity;
 
+	int						max_air_dashes;
+	int						dashes_remaining;
 	int						dashed_this_frame;
 	GFC_Vector3D			dash_direction;
+	int						dash_exhausted;
 
 	float					stamina;
 	float					stamina_recovery_rate;
@@ -82,6 +85,7 @@ typedef struct PlayerEntityData_s
 #define PLAYER_CROUCHING_JUMP_VELOCITY			(PLAYER_STANDING_JUMP_VELOCITY * 0.7)
 
 #define PLAYER_MAX_AIR_JUMPS					1
+#define PLAYER_MAX_AIR_DASHES					1
 
 #define PLAYER_DASH_VELOCITY					300.0f
 
