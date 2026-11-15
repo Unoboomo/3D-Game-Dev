@@ -69,6 +69,14 @@ Entity* player_new(GFC_Vector3D position) {
 		data->dashed_this_frame = 0;
 		data->dash_exhausted = 0;
 
+		data->max_stamina = PLAYER_MAX_STAMINA;
+		data->current_stamina = PLAYER_MAX_STAMINA;
+		data->stamina_recovery_rate = PLAYER_STAMINA_RECOVERY_RATE;
+		data->bullet_time_active = 0;
+
+		data->air_control_scale = 1;
+		data->max_speed_scale = 1;
+
 		data->reduced_gravity = 0;
 	}
 	gfc_line_cpy(self->name, "Player");
@@ -86,6 +94,8 @@ void player_free(Entity* self) {
 
 	data = (PlayerEntityData*)self->data;
 	//clean up data
+
+	time_set_time_scale(REAL_TIME_TIME_SCALE);
 
 	//free the data
 	free(data);
@@ -111,25 +121,37 @@ int player_think(Entity* self)
 	
 	//will eventually wrap this in if !grounded
 
-	if (gfc_input_command_down("dash") && (self->grounded || data->dashes_remaining > 0)) // && stamina > min required to dash
+	if (gfc_input_command_down("dash") && (self->grounded || data->dashes_remaining > 0)) // requirements to be in bullet time
 	{
-		if (!data->dash_exhausted)
+		if (data->bullet_time_active)
 		{
-			time_set_time_scale(BULLET_TIME_TIME_SCALE);
+			if (data->current_stamina <= 0)
+			{
+				data->bullet_time_active = 0;
+				data->dash_exhausted = 1;
+				time_set_time_scale(REAL_TIME_TIME_SCALE);
+			}
 		}
-		else
+		else 
 		{
-			data->dash_exhausted = 1;
-			time_set_time_scale(REAL_TIME_TIME_SCALE);
+			if (!data->dash_exhausted && data->current_stamina >= PLAYER_DASH_STAMINA_COST)
+			{
+				data->bullet_time_active = 1;
+				time_set_time_scale(BULLET_TIME_TIME_SCALE);
+			}
+			else
+			{
+				data->bullet_time_active = 0;
+				time_set_time_scale(REAL_TIME_TIME_SCALE);
+			}
 		}
 	}
 	else
 	{
+		data->bullet_time_active = 0;
 		time_set_time_scale(REAL_TIME_TIME_SCALE);
-		if (self->grounded)
-		{
-			data->dash_exhausted = 0;
-		}
+		data->dash_exhausted = 0;
+
 	}
 
 	if (gfc_input_command_released("dash"))
@@ -214,6 +236,7 @@ int player_update(Entity* self)
 	float ground_snap_offset;
 	GFC_Vector3D floor;
 	float scaled_delta_time;
+	float real_delta_time;
 	GFC_Vector3D scaled_physics;
 	GFC_TextLine debug;
 	float current_speed;
@@ -233,6 +256,31 @@ int player_update(Entity* self)
 	data = (PlayerEntityData*)self->data;
 
 	scaled_delta_time = time_get_scaled_delta();
+	real_delta_time = time_get_real_delta();
+
+	//stamina management
+	if (data->bullet_time_active)
+	{
+		data->current_stamina -= PLAYER_BULLET_TIME_STAMINA_DRAIN_RATE * real_delta_time;
+		if (data->current_stamina <= 0)
+		{
+			data->current_stamina = 0;
+			data->bullet_time_active = 0;
+			data->dash_exhausted = 1;
+			time_set_time_scale(REAL_TIME_TIME_SCALE);
+		}
+	}
+	else
+	{
+		if (data->current_stamina < data->max_stamina)
+		{
+			data->current_stamina += data->stamina_recovery_rate * real_delta_time;
+		}
+		if (data->current_stamina > data->max_stamina)
+		{
+			data->current_stamina = data->max_stamina;
+		}
+	}
 
 	//Start Movement calculations:
 
@@ -242,7 +290,7 @@ int player_update(Entity* self)
 		{
 			acceleration = PLAYER_SLIDING_ACCELERATION;
 			friction = PLAYER_SLIDING_FRICTION;
-			speed_soft_cap = PLAYER_GROUND_SPEED_SOFT_CAP;
+			speed_soft_cap = PLAYER_GROUND_SPEED_SOFT_CAP * data->max_speed_scale;
 		}
 		else
 		{
@@ -250,13 +298,13 @@ int player_update(Entity* self)
 			{
 				acceleration = PLAYER_GROUND_ACCELERATION;
 				friction = PLAYER_CROUCH_FRICTION;
-				speed_soft_cap = PLAYER_CROUCH_SPEED_SOFT_CAP;
+				speed_soft_cap = PLAYER_CROUCH_SPEED_SOFT_CAP * data->max_speed_scale;
 			}
 			else
 			{
 				acceleration = PLAYER_GROUND_ACCELERATION;
 				friction = PLAYER_GROUND_FRICTION;
-				speed_soft_cap = PLAYER_GROUND_SPEED_SOFT_CAP;
+				speed_soft_cap = PLAYER_GROUND_SPEED_SOFT_CAP * data->max_speed_scale;
 			}
 		}
 		
@@ -267,11 +315,11 @@ int player_update(Entity* self)
 	{
 		speed_soft_cap = PLAYER_AIR_SPEED_SOFT_CAP;
 		friction = PLAYER_AIR_FRICTION;
-		acceleration = PLAYER_AIR_ACCELERATION;
+		acceleration = PLAYER_AIR_ACCELERATION * data->air_control_scale;
 	}
 
 	// more granular movement while slowed down to dodge and stuff
-	if (gfc_input_command_down("dash"))
+	if (data->bullet_time_active)
 	{
 		speed_soft_cap *= PLAYER_BULLET_TIME_SPEED_SCALE;
 		acceleration *= PLAYER_BULLET_TIME_ACCELERATION_SCALE;
@@ -283,32 +331,36 @@ int player_update(Entity* self)
 		data->dashed_this_frame = 0;
 		if (self->grounded || data->dashes_remaining > 0)
 		{
-			if (!self->grounded)
+			if (data->current_stamina >= PLAYER_DASH_STAMINA_COST)
 			{
-				data->dashes_remaining--;
-			}
+				data->current_stamina -= PLAYER_DASH_STAMINA_COST;
 
-			//dash logic
-			if (gfc_vector3d_is_zero(data->wish_direction) || !self->grounded)
-			{ //if we're not grounded or not holding a direction, dash forward
-				data->dash_direction = gfc_vector3d(0, 1, 0);
-				gfc_vector3d_rotate_about_z(&data->dash_direction, data->cameraRotation.x);
-			}
-			else //(self->grounded && !gfc_vector3d_is_zero(data->wish_direction))
-			{
-				gfc_vector3d_copy(data->dash_direction, data->wish_direction);
+				if (!self->grounded)
+				{
+					data->dashes_remaining--;
+				}
 
-			}
-			self->velocity.x = data->dash_direction.x * PLAYER_DASH_VELOCITY;
-			self->velocity.y = data->dash_direction.y * PLAYER_DASH_VELOCITY;
+				//dash logic
+				if (gfc_vector3d_is_zero(data->wish_direction) || !self->grounded)
+				{ //if we're not grounded or not holding a direction, dash forward
+					data->dash_direction = gfc_vector3d(0, 1, 0);
+					gfc_vector3d_rotate_about_z(&data->dash_direction, data->cameraRotation.x);
+				}
+				else //(self->grounded && !gfc_vector3d_is_zero(data->wish_direction))
+				{
+					gfc_vector3d_copy(data->dash_direction, data->wish_direction);
 
-			//then resent z velocity so we dont instantly crater
-			if (!self->grounded && self->velocity.z < 0)
-			{
-				self->velocity.z = 0;
+				}
+				self->velocity.x = data->dash_direction.x * PLAYER_DASH_VELOCITY;
+				self->velocity.y = data->dash_direction.y * PLAYER_DASH_VELOCITY;
+
+				//then resent z velocity so we dont instantly crater
+				if (!self->grounded && self->velocity.z < 0)
+				{
+					self->velocity.z = 0;
+				}
 			}
 		}
-		
 	}
 
 	player_get_movement_state_as_GFC_Textline(debug);
@@ -554,9 +606,10 @@ void player_get_movement_state_as_GFC_Textline(GFC_TextLine text)
 	if (!the_player->data)
 	{
 		slog("the player has no data, cannot get movement state");
+		return;
 	}
 
-	data = (PlayerEntityData*)the_player->data;
+	data = (PlayerEntityData*) the_player->data;
 
 	if (data->movement_state == PMS_Normal)
 	{
@@ -578,4 +631,42 @@ void player_get_movement_state_as_GFC_Textline(GFC_TextLine text)
 	{
 		gfc_line_cpy(text, "Error");
 	}
+}
+
+float player_get_current_stamina()
+{
+	PlayerEntityData* data;
+	if (!the_player)
+	{
+		slog("cannot get current_stamina for nonexistent player");
+		return 0;
+	}
+	if (!the_player->data)
+	{
+		slog("the player has no data, cannot get current_stamina");
+		return 0;
+	}
+
+	data = (PlayerEntityData*)the_player->data;
+
+	return data->current_stamina;
+}
+
+float player_get_max_stamina()
+{
+	PlayerEntityData* data;
+	if (!the_player)
+	{
+		slog("cannot get max_stamina for nonexistent player");
+		return 0;
+	}
+	if (!the_player->data)
+	{
+		slog("the player has no data, cannot get max_stamina");
+		return 0;
+	}
+
+	data = (PlayerEntityData*) the_player->data;
+
+	return data->max_stamina;
 }

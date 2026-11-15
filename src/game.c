@@ -71,6 +71,7 @@ int main(int argc,char *argv[])
     Level* level;
     //Sprite *bg;
     GameState game_state;
+    GFC_TextLine stamina_tracker;
 
     //initializtion    
     parse_arguments(argc,argv);
@@ -111,6 +112,15 @@ int main(int argc,char *argv[])
     entity_spawn_from_def("Bounce Pad", gfc_vector3d(180, -150, 0));
     entity_spawn_from_def("Reduced Gravity Field", gfc_vector3d(-175, 175, 0));
     entity_spawn_from_def("Breakable Wall", gfc_vector3d(-150, 150, 0));
+
+    //upgrades
+    entity_spawn_from_def("Max Jump Upgrade", gfc_vector3d(-175, 0, 0));
+    entity_spawn_from_def("Max Dash Upgrade", gfc_vector3d(-175, 20, 0));
+    entity_spawn_from_def("Max Stamina Upgrade", gfc_vector3d(-175, 40, 0));
+    entity_spawn_from_def("Stamina Recovery Upgrade", gfc_vector3d(-175, 60, 0));
+    entity_spawn_from_def("Air Control Upgrade", gfc_vector3d(-175, 80, 0));
+    entity_spawn_from_def("Max Speed Upgrade", gfc_vector3d(-175, 100, 0));
+
 
     game_state = game_play();
     // main game loop    
@@ -153,6 +163,9 @@ int main(int argc,char *argv[])
                     gf2d_font_draw_line_tag("Game is paused", FT_H1, GFC_COLOR_RED, gfc_vector2d(50, 50));
                 }
                 gf2d_font_draw_line_tag("ALT+F4 to exit",FT_H1,GFC_COLOR_WHITE, gfc_vector2d(10,10));
+
+                gfc_line_sprintf(stamina_tracker, "Stamina: %.0f / %.0f", player_get_current_stamina(), player_get_max_stamina());
+                gf2d_font_draw_line_tag(stamina_tracker, FT_H1, GFC_COLOR_MAGENTA, gfc_vector2d(700, 10));
                 gf2d_mouse_draw();
         gf3d_vgraphics_render_end();
         if (gfc_input_command_down("exit"))_done = 1; // exit condition

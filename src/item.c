@@ -8,6 +8,12 @@
 void item_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 void item_jump_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 void item_dash_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_max_jump_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_max_dash_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_max_stamina_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_stamina_recovery_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_air_control_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
+void item_max_speed_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec);
 
 Entity* spawn_item_from_def(const char* itemName, GFC_Vector3D position)
 {
@@ -70,6 +76,30 @@ void* item_get_touch_function_by_name(GFC_TextLine name)
 	if (gfc_strlcmp(name, "Dash Refresh") == 0)
 	{
 		return item_dash_refresh_touch;
+	}
+	if (gfc_strlcmp(name, "Max Jump Upgrade") == 0)
+	{
+		return item_max_jump_upgrade_touch;
+	}
+	if (gfc_strlcmp(name, "Max Dash Upgrade") == 0)
+	{
+		return item_max_dash_upgrade_touch;
+	}
+	if (gfc_strlcmp(name, "Max Stamina Upgrade") == 0)
+	{
+		return item_max_stamina_upgrade_touch;
+	}
+	if (gfc_strlcmp(name, "Stamina Recovery Upgrade") == 0)
+	{
+		return item_stamina_recovery_upgrade_touch;
+	}
+	if (gfc_strlcmp(name, "Air Control Upgrade") == 0)
+	{
+		return item_air_control_upgrade_touch;
+	}
+	if (gfc_strlcmp(name, "Max Speed Upgrade") == 0)
+	{
+		return item_max_speed_upgrade_touch;
 	}
 	else
 	{
@@ -134,6 +164,144 @@ void item_dash_refresh_touch(Entity* self, Entity* other, Uint8 collision_bitmas
 
 		data = (PlayerEntityData*)other->data;
 		data->dashes_remaining++;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_max_jump_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->max_air_jumps++;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_max_dash_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->max_air_dashes++;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_max_stamina_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->max_stamina *= 1.25;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_stamina_recovery_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->stamina_recovery_rate *= 2;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_air_control_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->air_control_scale *= 2;
+		entity_free(self);
+		return;
+	}
+}
+
+void item_max_speed_upgrade_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
+{
+	PlayerEntityData* data;
+	if (!self || !other)
+	{
+		return;
+	}
+
+	if (entity_check_team(other, ETT_player))
+	{
+		if (!other->data)
+		{
+			return;
+		}
+		slog("give player item %s", self->name);
+
+		data = (PlayerEntityData*)other->data;
+		data->max_speed_scale *= 1.5;
 		entity_free(self);
 		return;
 	}

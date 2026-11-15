@@ -79,6 +79,72 @@
       "team": "world_collider",
       "color": [ 100, 100, 100, 255 ],
       "scale": [ 20, 20, 20 ]
+    },
+    {
+      "name": "Max Jump Upgrade",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "max jump upgrade",
+      "team": "item",
+      "color": [ 125, 125, 0, 255 ]
+    },
+    {
+      "name": "Max Dash Upgrade",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "max dash upgrade",
+      "team": "item",
+      "color": [ 0, 125, 125, 255 ]
+    },
+    {
+      "name": "Max Stamina Upgrade",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "max stamina upgrade",
+      "team": "item",
+      "color": [ 0, 0, 255, 255 ]
+    },
+    {
+      "name": "Stamina Recovery Upgrade",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "stamina recovery upgrade",
+      "team": "item",
+      "color": [ 125, 0, 125, 255 ]
+    },
+    {
+      "name": "Air Control Upgrade",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "air control upgrade",
+      "team": "item",
+      "color": [ 125, 125, 125, 255 ]
+    },
+    {
+      "name": "Max Speed Upgrade",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "max speed upgrade",
+      "team": "item",
+      "color": [ 200, 100, 200, 255 ]
     }
   ]
 }

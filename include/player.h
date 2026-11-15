@@ -35,8 +35,13 @@ typedef struct PlayerEntityData_s
 
 	int						reduced_gravity;
 
-	float					stamina;
 	float					stamina_recovery_rate;
+	float					max_stamina;
+	float					current_stamina;
+	int						bullet_time_active;
+
+	float					air_control_scale;
+	float					max_speed_scale;
 
 	Uint8					wall_run_side;
 	//other player specific data
@@ -92,6 +97,11 @@ typedef struct PlayerEntityData_s
 
 #define PLAYER_DASH_VELOCITY					300.0f
 
+#define PLAYER_MAX_STAMINA                     100.0f
+#define PLAYER_STAMINA_RECOVERY_RATE            20.0f
+#define PLAYER_BULLET_TIME_STAMINA_DRAIN_RATE   40.0f
+#define PLAYER_DASH_STAMINA_COST                20.0f
+
 /**
 * @brief spawn a new player entity
 * @param position where to spawn it
@@ -110,4 +120,8 @@ void player_get_movement_state_as_GFC_Textline(GFC_TextLine text)
 * @brief get the player singleton
 */
 Entity* player_get_the();
+
+float player_get_current_stamina();
+
+float player_get_max_stamina();
 #endif
