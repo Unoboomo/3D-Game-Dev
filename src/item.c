@@ -46,10 +46,28 @@ Entity* spawn_item_from_def(const char* itemName, GFC_Vector3D position)
 	self->bounds = gfc_box_from_config(sj_object_get_value(itemDef, "bounds"));
 	self->position = position;
 	self->team = ETT_item;
-	self->touch = item_touch;
+	self->touch = item_get_touch_function_by_name(self->name);
 	return self;
 }
 
+void* item_get_touch_function_by_name(GFC_TextLine name)
+{
+	if (!name)
+	{
+		slog("cannot find a touch function for an item with no name");
+		return NULL;
+	}
+	if (gfc_strlcmp(name, "Steve") == 0)
+	{
+		return item_touch;
+	}
+	else
+	{
+		slog("touch function for item %s not found", name);
+		return NULL;
+	}
+	
+}
 void item_touch(Entity* self, Entity* other, Uint8 collision_bitmask, GFC_Vector3D min_translation_vec)
 {
 	if (!self || !other)

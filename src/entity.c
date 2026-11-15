@@ -5,6 +5,7 @@
 
 #include "utils.h"
 #include "level.h"
+#include "item.h"
 
 #include "entity.h"
 
@@ -88,6 +89,7 @@ Entity* entity_spawn_from_def(const char* entityName, GFC_Vector3D position)
 	const char* str;
 	SJson* entityDef;
 	Entity* self;
+	GFC_Color color_mod;
 	if (!entityName)
 	{
 		slog("cannot spawn entity with no provided name");
@@ -126,14 +128,22 @@ Entity* entity_spawn_from_def(const char* entityName, GFC_Vector3D position)
 	{
 		self->scale = gfc_vector3d(1, 1, 1);
 	}
-
 	utils_scale_box(self->scale, &(self->bounds));
-	gfc_vector3d_to_slog(self->scale);
+
 	str = sj_object_get_string(entityDef, "team");
 	self->team = entity_team_from_str(str);
 
-	self->position = position;
+
+	if (self->team == ETT_item)
+	{
+		self->touch = item_get_touch_function_by_name(self->name);
+	}
+
+	color_mod = sj_object_get_color(entityDef, "color");
+	self->color_mod = color_mod;
 	
+	self->position = position;
+
 	return self;
 }
 

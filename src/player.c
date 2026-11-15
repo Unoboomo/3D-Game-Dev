@@ -310,7 +310,7 @@ int player_update(Entity* self)
 	}
 
 	player_get_movement_state_as_GFC_Textline(debug);
-	slog("player state: %s", debug);
+	//slog("player state: %s", debug);
 	slog_sync();
 
 	//1. apply velocity dampening:

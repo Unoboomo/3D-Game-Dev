@@ -1,5 +1,6 @@
 {
   "model": {
     "obj": "models/primitives/unit_cube.obj",
+    "texture": "models/primitives/flatwhite.png"
   }
 }

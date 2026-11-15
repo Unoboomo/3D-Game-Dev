@@ -21,6 +21,17 @@
       "description": "unit cube",
       "team": "world",
       "scale": [ 300, 5, 80 ]
+    },
+    {
+      "name": "Steve",
+      "model": "models/steve/steve.model",
+      "bounds": {
+        "m": [ -2, -1, -0 ],
+        "s": [ 4, 2, 8 ]
+      },
+      "description": "steve",
+      "team": "item",
+      "color": [0, 0, 0, 255],
     }
   ]
 }
